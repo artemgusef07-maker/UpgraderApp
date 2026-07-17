@@ -3,14 +3,10 @@ let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 let stats = JSON.parse(localStorage.getItem('stats')) || { upgradesTried: 0 };
 let lastClickTime = 0;
 
-/* REPLACE THESE COMPONENT TRACKERS AT THE TOP OF app.js */
-let selectedWagerIndices = []; // Now stores up to 6 item indices
+/* UPDATE THE TOP OF YOUR app.js TO LOOK EXACTLY LIKE THIS */
+let selectedWagerIndices = []; // Tracks the 6 items for the new upgrader
+let selectedWagerIndex = null;   // KEEP THIS! It stops your old code from crashing
 let selectedTargetItem = null;
-let isRolling = false;
-let currentInspectCaseIndex = null;
-let currentSelectedQuantity = 1;
-
-// Lock handles to block game breaking resets during active rolls
 let isRolling = false;
 let currentInspectCaseIndex = null;
 let currentSelectedQuantity = 1;
