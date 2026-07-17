@@ -1,11 +1,10 @@
-let balance = parseFloat(localStorage.getItem('balance')) || 100.0;
+let balance = parseFloat(localStorage.getItem('balance')) || 500.0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 let stats = JSON.parse(localStorage.getItem('stats')) || { upgradesTried: 0 };
-let bestPulls = JSON.parse(localStorage.getItem('bestPulls')) || [];
 let lastClickTime = 0;
 
 let selectedWagerIndex = null;
-let selectedTargetIndex = null;
+let selectedTargetItem = null;
 
 window.onload = () => {
     if (window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); }
@@ -15,18 +14,20 @@ window.onload = () => {
 
 function clearLegacyData() {
     localStorage.clear();
-    balance = 100.0; inventory = []; stats = { upgradesTried: 0 }; bestPulls = [];
-    selectedWagerIndex = null; selectedTargetIndex = null;
+    balance = 500.0; inventory = []; stats = { upgradesTried: 0 };
+    selectedWagerIndex = null; selectedTargetItem = null;
     saveGame();
     renderCaseMenu();
     renderUpgraderGrids();
 }
 
 function switchTab(tabId) {
-    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active-tab'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
+    
+    document.getElementById(tabId).classList.add('active-tab');
     document.getElementById('btn-' + tabId).classList.add('active');
+    
     if (tabId === 'upgraderTab') renderUpgraderGrids();
 }
 
@@ -34,7 +35,6 @@ function saveGame() {
     localStorage.setItem('balance', balance);
     localStorage.setItem('inventory', JSON.stringify(inventory));
     localStorage.setItem('stats', JSON.stringify(stats));
-    localStorage.setItem('bestPulls', JSON.stringify(bestPulls));
     updateUI();
 }
 
@@ -43,7 +43,6 @@ function updateUI() {
     document.getElementById('statUpgrades').innerText = stats.upgradesTried;
     document.getElementById('statItemsCount').innerText = inventory.length;
 
-    // Render Inventory Tab Shelf
     const profileInv = document.getElementById('profileInventory');
     profileInv.innerHTML = '';
     inventory.forEach((item, index) => {
@@ -56,29 +55,18 @@ function updateUI() {
         `;
         profileInv.appendChild(card);
     });
-
-    // Render Best Drops Shelf
-    const leaderList = document.getElementById('leaderboardList');
-    leaderList.innerHTML = '';
-    [...bestPulls].sort((a,b) => b.value - a.value).slice(0, 6).forEach(item => {
-        let card = document.createElement('div');
-        card.className = 'mini-item-card';
-        card.innerHTML = `<span class="mic-emoji">${item.emoji}</span><span class="mic-val">${item.value} U</span>`;
-        leaderList.appendChild(card);
-    });
 }
 
 function clickCoin() {
     const now = Date.now();
-    if (now - lastClickTime >= 25) {
-        balance += 0.1;
+    if (now - lastClickTime >= 40) {
+        balance += 0.5;
         lastClickTime = now;
         document.getElementById('balanceDisplay').innerText = balance.toFixed(1);
         localStorage.setItem('balance', balance);
     }
 }
 
-/* Render the clean Case Selection Menu below the Tap button */
 function renderCaseMenu() {
     const menu = document.getElementById('caseMenuGrid');
     menu.innerHTML = '';
@@ -97,15 +85,13 @@ function renderCaseMenu() {
     });
 }
 
-/* Ultra Smooth Horizontal Tape Roller Unboxing Animation Engine */
 function openCaseWithRoller(caseIndex) {
     const targetCase = casesData[caseIndex];
-    if (balance < targetCase.cost) return alert("Insufficient U-Coins!");
+    if (balance < targetCase.cost) return alert("Not enough U-Coins!");
     
     balance -= targetCase.cost;
     const itemWon = targetCase.rollLogic();
     
-    // UI Elements Reset
     document.getElementById('rollerCaseTitle').innerText = `Opening ${targetCase.name}`;
     document.getElementById('rollerResultCard').style.display = 'none';
     document.getElementById('modalClaimBtn').style.display = 'none';
@@ -114,11 +100,9 @@ function openCaseWithRoller(caseIndex) {
     tape.style.transform = 'translateX(0px)';
     tape.innerHTML = '';
 
-    // Generate 35 dummy boxes to populate visual sliding path stream
     for(let i=0; i<35; i++) {
         let card = document.createElement('div');
         card.className = 'roller-card-item';
-        // Place item won at index position 28 exactly
         let randomMockItem = (i === 28) ? itemWon : itemPool[Math.floor(Math.random() * itemPool.length)];
         card.innerText = randomMockItem.emoji;
         tape.appendChild(card);
@@ -126,25 +110,20 @@ function openCaseWithRoller(caseIndex) {
 
     document.getElementById('unboxingModal').style.display = 'flex';
 
-    // Drive calculation dynamics
     setTimeout(() => {
-        tape.style.transition = 'transform 3.5s cubic-bezier(0.1, 0.8, 0.1, 1)';
-        // 28 items * 70px cell pacing metric (60px card dimension + 10px spacing buffer layout block)
+        tape.style.transition = 'transform 3.2s cubic-bezier(0.1, 0.8, 0.1, 1)';
         tape.style.transform = 'translateX(-1960px)';
     }, 50);
 
-    // Stop execution wrap state reveal
     setTimeout(() => {
         inventory.push(itemWon);
-        bestPulls.push(itemWon);
         saveGame();
-
         document.getElementById('resultEmoji').innerText = itemWon.emoji;
-        document.getElementById('resultName').innerText = "Acquired Item";
-        document.getElementById('resultValue').innerText = `${itemWon.value} U-Coins`;
+        document.getElementById('resultName').innerText = "Unboxed Item";
+        document.getElementById('resultValue').innerText = `${itemWon.value} U`;
         document.getElementById('rollerResultCard').style.display = 'block';
         document.getElementById('modalClaimBtn').style.display = 'block';
-    }, 3600);
+    }, 3300);
 }
 
 function closeUnboxModal() {
@@ -155,11 +134,15 @@ function sellItem(index, event) {
     event.stopPropagation();
     balance += Math.floor(inventory[index].value * 0.7);
     inventory.splice(index, 1);
-    if(selectedWagerIndex === index) selectedWagerIndex = null;
+    if(selectedWagerIndex === index) {
+        selectedWagerIndex = null;
+        selectedTargetItem = null;
+    }
     saveGame();
-    if(document.getElementById('upgraderTab').classList.contains('active')) renderUpgraderGrids();
+    if(document.getElementById('upgraderTab').classList.contains('active-tab')) renderUpgraderGrids();
 }
 
+/* Render Upgrader Grid - Blocks Items Cheaper or Equal to Wager */
 function renderUpgraderGrids() {
     const wagerGrid = document.getElementById('wagerGrid');
     wagerGrid.innerHTML = '';
@@ -169,8 +152,11 @@ function renderUpgraderGrids() {
         card.innerHTML = `<span class="mic-emoji">${item.emoji}</span><span class="mic-val">${item.value} U</span>`;
         card.onclick = () => {
             selectedWagerIndex = index;
+            selectedTargetItem = null; // Clear old target to force re-evaluation
             document.getElementById('stageWager').className = "dock-slot active";
-            document.getElementById('stageWager').innerHTML = `<span style="font-size:20px">${item.emoji}</span><span>${item.value} U</span>`;
+            document.getElementById('stageWager').innerHTML = `<span>${item.emoji}</span><span>${item.value} U</span>`;
+            document.getElementById('stageTarget').className = "dock-slot empty";
+            document.getElementById('stageTarget').innerText = "Select Target";
             renderUpgraderGrids();
             updateChance();
         };
@@ -179,14 +165,30 @@ function renderUpgraderGrids() {
 
     const targetGrid = document.getElementById('targetGrid');
     targetGrid.innerHTML = '';
-    targetShopSkins.forEach((item, index) => {
+    
+    if (selectedWagerIndex === null) {
+        targetGrid.innerHTML = '<div style="color:#6e6e82; padding:10px;">Select a wager item first!</div>';
+        return;
+    }
+
+    const wagerItem = inventory[selectedWagerIndex];
+    // FORCE PROFIT: Filter so targets are strictly more expensive than the wager item
+    const validTargets = itemPool.filter(item => item.value > wagerItem.value);
+
+    if (validTargets.length === 0) {
+        targetGrid.innerHTML = '<div style="color:#ff6b6b; padding:10px;">Max item tier reached!</div>';
+        return;
+    }
+
+    validTargets.forEach((item) => {
+        let isSelected = selectedTargetItem && selectedTargetItem.value === item.value && selectedTargetItem.emoji === item.emoji;
         let card = document.createElement('div');
-        card.className = `mini-item-card ${selectedTargetIndex === index ? 'selected' : ''}`;
+        card.className = `mini-item-card ${isSelected ? 'selected' : ''}`;
         card.innerHTML = `<span class="mic-emoji">${item.emoji}</span><span class="mic-val">${item.value} U</span>`;
         card.onclick = () => {
-            selectedTargetIndex = index;
+            selectedTargetItem = item;
             document.getElementById('stageTarget').className = "dock-slot active";
-            document.getElementById('stageTarget').innerHTML = `<span style="font-size:20px">${item.emoji}</span><span>${item.value} U</span>`;
+            document.getElementById('stageTarget').innerHTML = `<span>${item.emoji}</span><span>${item.value} U</span>`;
             renderUpgraderGrids();
             updateChance();
         };
@@ -194,13 +196,44 @@ function renderUpgraderGrids() {
     });
 }
 
+/* Custom Case-Battle Preset Processing Logics */
+function applyPresetMultiplier(mult) {
+    if (selectedWagerIndex === null) return alert("Select a wager item first!");
+    let desiredValue = inventory[selectedWagerIndex].value * mult;
+    findAndSelectClosestTarget(desiredValue);
+}
+
+function applyPresetChance(chancePercent) {
+    if (selectedWagerIndex === null) return alert("Select a wager item first!");
+    let desiredValue = inventory[selectedWagerIndex].value / (chancePercent / 100);
+    findAndSelectClosestTarget(desiredValue);
+}
+
+function findAndSelectClosestTarget(targetValue) {
+    const wagerItem = inventory[selectedWagerIndex];
+    // Filter only items that are more expensive than our item
+    const validTargets = itemPool.filter(item => item.value > wagerItem.value);
+    if(validTargets.length === 0) return;
+
+    // Find the closest item to the calculated ideal match point
+    let closest = validTargets.reduce((prev, curr) => {
+        return (Math.abs(curr.value - targetValue) < Math.abs(prev.value - targetValue)) ? curr : prev;
+    });
+
+    selectedTargetItem = closest;
+    document.getElementById('stageTarget').className = "dock-slot active";
+    document.getElementById('stageTarget').innerHTML = `<span>${closest.emoji}</span><span>${closest.value} U</span>`;
+    renderUpgraderGrids();
+    updateChance();
+}
+
 function updateChance() {
-    if (selectedWagerIndex === null || selectedTargetIndex === null) {
+    if (selectedWagerIndex === null || selectedTargetItem === null) {
         document.getElementById('chanceDisplay').innerText = "0.00%";
         document.getElementById('upgraderWheel').style.background = `#e74c3c`;
         return;
     }
-    let chance = (inventory[selectedWagerIndex].value / targetShopSkins[selectedTargetIndex].value) * 100;
+    let chance = (inventory[selectedWagerIndex].value / selectedTargetItem.value) * 100;
     if (chance > 100) chance = 100;
     document.getElementById('chanceDisplay').innerText = chance.toFixed(2) + "%";
     
@@ -211,9 +244,8 @@ function updateChance() {
 }
 
 function attemptUpgrade() {
-    if (selectedWagerIndex === null || selectedTargetIndex === null) return alert("Select staged items!");
-    let chance = (inventory[selectedWagerIndex].value / targetShopSkins[selectedTargetIndex].value) * 100;
-    if (chance > 100) chance = 100;
+    if (selectedWagerIndex === null || selectedTargetItem === null) return alert("Staging cards are empty!");
+    let chance = (inventory[selectedWagerIndex].value / selectedTargetItem.value) * 100;
     
     stats.upgradesTried += 1;
     const isFast = document.getElementById('fastUpgrade').checked;
@@ -226,31 +258,31 @@ function attemptUpgrade() {
     let isWin = roll <= chance;
     let halfSlice = (chance * 3.6) / 2;
     let targetDegree = isWin ? ((180 - halfSlice) + (Math.random() * (halfSlice * 2))) : (Math.random() > 0.5 ? (Math.random() * (180 - halfSlice)) : ((180 + halfSlice) + (Math.random() * (180 - halfSlice))));
-    let totalSpins = 2160 + targetDegree;
+    let totalSpins = 1440 + targetDegree;
 
     function resolveUpgrade() {
-        let wagerItem = inventory[selectedWagerIndex];
-        let targetItem = targetShopSkins[selectedTargetIndex];
         inventory.splice(selectedWagerIndex, 1);
-        
         if (isWin) {
-            inventory.push(targetItem); bestPulls.push(targetItem);
-            alert(`🎉 upgraded successfully to ${targetItem.emoji}!`);
+            inventory.push(selectedTargetItem);
+            alert(`🎉 Success! Upgraded into ${selectedTargetItem.emoji}`);
         } else {
-            alert("💥 Upgrade crashed!");
+            alert("💥 Boom! Upgrade exploded.");
         }
         selectedWagerIndex = null;
+        selectedTargetItem = null;
         document.getElementById('stageWager').className = "dock-slot empty";
         document.getElementById('stageWager').innerText = "Select Wager";
+        document.getElementById('stageTarget').className = "dock-slot empty";
+        document.getElementById('stageTarget').innerText = "Select Target";
         btn.innerText = "START UPGRADE"; btn.disabled = false;
         saveGame(); renderUpgraderGrids(); updateChance();
     }
 
     if (isFast) resolveUpgrade();
     else {
-        btn.innerText = "COMPUTING..."; btn.disabled = true;
-        pointer.style.transition = 'transform 4s cubic-bezier(0.1, 0.8, 0.1, 1)';
+        btn.innerText = "ROLLING..."; btn.disabled = true;
+        pointer.style.transition = 'transform 2.5s cubic-bezier(0.1, 0.8, 0.1, 1)';
         pointer.style.transform = `rotate(${totalSpins}deg)`;
-        setTimeout(resolveUpgrade, 4100);
+        setTimeout(resolveUpgrade, 2600);
     }
 }

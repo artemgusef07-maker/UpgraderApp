@@ -3,29 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cyber Upgrader</title>
+    <title>Telegram Upgrader App</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <div class="phone-wrapper">
-        <!-- Top Sticky Header -->
+        <!-- Top Balance Header -->
         <div class="app-header">
             <div class="u-coin-balance">
                 <span class="coin-logo">U</span>
-                <span id="balanceDisplay">100.0</span>
+                <span id="balanceDisplay">500.0</span>
             </div>
             <button class="cache-purge-btn" onclick="clearLegacyData()">🔄 Reset</button>
         </div>
 
         <!-- TAB 1: TAP & CASES -->
-        <div id="clickerTab" class="tab-pane active">
+        <div id="clickerTab" class="tab-pane active-tab">
             <div class="tap-zone">
                 <button class="tap-sphere" onclick="clickCoin()">👾</button>
-                <div class="tap-hint">⚡ +0.1 per tap</div>
+                <div class="tap-hint">⚡ +0.5 per tap</div>
             </div>
 
-            <div class="section-divider">🛒 SELECT CASE</div>
+            <div class="section-divider">🎰 SERIEST CASES</div>
+            <!-- The case grid will load here explicitly -->
             <div id="caseMenuGrid" class="case-selection-grid"></div>
         </div>
 
@@ -41,9 +42,18 @@
                     </div>
                 </div>
 
+                <!-- Case-Battle Style Presets -->
+                <div class="preset-row">
+                    <button class="preset-btn" onclick="applyPresetMultiplier(2)">x2</button>
+                    <button class="preset-btn" onclick="applyPresetMultiplier(5)">x5</button>
+                    <button class="preset-btn" onclick="applyPresetChance(35)">35%</button>
+                    <button class="preset-btn" onclick="applyPresetChance(55)">55%</button>
+                    <button class="preset-btn" onclick="applyPresetChance(75)">75%</button>
+                </div>
+
                 <label class="instant-mode-toggle">
                     <input type="checkbox" id="fastUpgrade">
-                    <span>⚡ Instant (Skip Spin)</span>
+                    <span>⚡ Instant Roll</span>
                 </label>
 
                 <button class="action-trigger purple-theme" onclick="attemptUpgrade()" id="upgradeBtn">START UPGRADE</button>
@@ -56,14 +66,14 @@
                 <div id="stageTarget" class="dock-slot empty">Select Target</div>
             </div>
 
-            <div class="section-divider">🎒 YOUR SHELF</div>
+            <div class="section-divider">🎒 YOUR ITEM FOR UPGRADE</div>
             <div id="wagerGrid" class="item-grid-shelf"></div>
 
-            <div class="section-divider">🏬 TARGET SHOWROOM</div>
+            <div class="section-divider">🏬 TARGET SHOWROOM (PROFIT ONLY)</div>
             <div id="targetGrid" class="item-grid-shelf"></div>
         </div>
 
-        <!-- TAB 3: INVENTORY & PROFILE -->
+        <!-- TAB 3: INVENTORY -->
         <div id="profileTab" class="tab-pane">
             <div class="dashboard-stats">
                 <div class="stat-card">
@@ -72,18 +82,15 @@
                 </div>
                 <div class="stat-card">
                     <span class="sc-val" id="statItemsCount">0</span>
-                    <span class="sc-lbl">Items</span>
+                    <span class="sc-lbl">Inventory Count</span>
                 </div>
             </div>
             
             <div class="section-divider">🎒 FULL INVENTORY</div>
             <div id="profileInventory" class="item-grid-shelf"></div>
-            
-            <div class="section-divider">🏆 ALL-TIME BEST</div>
-            <div id="leaderboardList" class="item-grid-shelf"></div>
         </div>
 
-        <!-- SMOOTH HORIZONTAL ROLLER MODAL (No overlapping text) -->
+        <!-- SMOOTH HORIZONTAL ROLLER MODAL -->
         <div id="unboxingModal" class="modal-backdrop">
             <div class="roller-window">
                 <div class="roller-title" id="rollerCaseTitle">Opening Case...</div>
@@ -99,7 +106,7 @@
                     <div id="resultValue" style="color: #ffca28; font-size: 14px;">0 U</div>
                 </div>
 
-                <button class="modal-claim-btn" id="modalClaimBtn" onclick="closeUnboxModal()">COLLECT</button>
+                <button class="modal-claim-btn" id="modalClaimBtn" onclick="closeUnboxModal()">COLLECT ITEM</button>
             </div>
         </div>
 
