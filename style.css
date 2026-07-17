@@ -28,3 +28,52 @@ select { padding: 10px; background: #2c2c2c; color: white; border-radius: 5px; b
 .clicker-btn:active { transform: scale(0.95); }
 .inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .item-box { background: #2a2a2a; padding: 10px; border-radius: 8px; text-align: center; border-left: 5px solid gray; font-size: 14px;}
+
+/* --- UPGRADER WHEEL STYLES --- */
+.wheel-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    overflow: hidden;
+}
+.wheel {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    /* This is the pie chart. It starts all red (0% win chance) */
+    background: conic-gradient(#4caf50 0% 0%, #e74c3c 0% 100%); 
+    position: relative;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    transition: background 0.5s ease; 
+}
+.wheel-center {
+    width: 150px;
+    height: 150px;
+    background: #1e1e1e; /* Matches the card background to make it a ring */
+    border-radius: 50%;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 2;
+}
+.pointer {
+    width: 4px;
+    height: 90px;
+    background: white;
+    position: absolute;
+    top: 0;
+    left: 88px; /* Centers the pointer */
+    transform-origin: bottom center; /* Makes it spin from the bottom */
+    z-index: 3;
+    transform: rotate(0deg);
+}
+/* Creates the little arrow head at the top of the pointer */
+.pointer::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -6px;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 15px solid white;
+}

@@ -116,7 +116,16 @@ function updateChance() {
     
     let chance = (inventory[invSelect].value / targetShopSkins[targetSelect].value) * 100;
     if (chance > 100) chance = 100;
+    
     document.getElementById('chanceDisplay').innerText = chance.toFixed(2) + "%";
+    
+    // Update the visual wheel colors!
+    document.getElementById('upgraderWheel').style.background = `conic-gradient(#4caf50 0% ${chance}%, #e74c3c ${chance}% 100%)`;
+    
+    // Reset the pointer position instantly
+    const pointer = document.getElementById('wheelPointer');
+    pointer.style.transition = 'none';
+    pointer.style.transform = 'rotate(0deg)';
 }
 
 function attemptUpgrade() {
@@ -133,9 +142,19 @@ function attemptUpgrade() {
     
     stats.upgradesTried += 1;
     const btn = document.getElementById('upgradeBtn');
+    const pointer = document.getElementById('wheelPointer');
+    
+    // Reset pointer instantly before spinning
+    pointer.style.transition = 'none';
+    pointer.style.transform = 'rotate(0deg)';
+    pointer.offsetHeight; // Forces the browser to reset immediately
+    
+    // Calculate where the pointer should land
+    let roll = Math.random() * 100; // roll from 0 to 100
+    let rollDegree = (roll / 100) * 360; // converts roll to a 360 degree circle
+    let totalDegrees = 1800 + rollDegree; // Adds 5 full spins (1800 deg) for suspense
     
     function resolveUpgrade() {
-        let roll = Math.random() * 100;
         inventory.splice(invIndex, 1); // Remove the wagered item
         
         if (roll <= chance) {
@@ -148,7 +167,7 @@ function attemptUpgrade() {
         btn.innerText = "UPGRADE";
         btn.disabled = false;
         saveGame();
-        updateChance();
+        updateChance(); // Resets wheel for next time
     }
     
     if (isFast) {
@@ -156,6 +175,13 @@ function attemptUpgrade() {
     } else {
         btn.innerText = "UPGRADING...";
         btn.disabled = true;
-        setTimeout(resolveUpgrade, 1500); // 1.5 second fake suspense animation
+        
+        // Spin the wheel! 'cubic-bezier' makes it slow down realistically
+        pointer.style.transition = 'transform 3.5s cubic-bezier(0.1, 0.7, 0.1, 1)'; 
+        pointer.style.transform = `rotate(${totalDegrees}deg)`;
+        
+        // Wait exactly 3.6 seconds for the animation to finish before showing the result
+        setTimeout(resolveUpgrade, 3600); 
     }
 }
+

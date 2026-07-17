@@ -38,6 +38,14 @@
         <select id="targetSelect" onchange="updateChance()" style="width: 100%; margin-bottom: 10px;"></select>
         
         <h2 style="text-align: center; color: #4caf50;">Win Chance: <span id="chanceDisplay">0.00%</span></h2>
+
+        <!-- Upgrader Wheel Animation -->
+        <div class="wheel-container">
+            <div id="upgraderWheel" class="wheel">
+                <div id="wheelPointer" class="pointer"></div>
+                <div class="wheel-center"></div>
+            </div>
+        </div>
         
         <div style="margin: 15px 0;">
             <input type="checkbox" id="fastUpgrade"> <label for="fastUpgrade">Fast Upgrade (Skip Animation)</label>
