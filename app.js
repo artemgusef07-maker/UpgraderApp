@@ -153,13 +153,14 @@ function rollFromCase(boxConfig) {
     return boxConfig.contents[boxConfig.contents.length - 1].item;
 }
 
-/* Master Multi-Pull Sequence Engine */
+// ... (Keep existing variables: balance, inventory, isRolling)
+
 function confirmCasePurchase() {
     const targetCase = casesData[currentInspectCaseIndex];
     const totalCost = targetCase.cost * currentSelectedQuantity;
 
     if (balance < totalCost) {
-        alert("Insufficient operational U-Coin balance for this selection size!");
+        alert("Insufficient balance!");
         return;
     }
 
@@ -167,56 +168,59 @@ function confirmCasePurchase() {
     isRolling = true;
     balance -= totalCost;
 
-    // Collect item objects beforehand
     let itemsWonList = [];
     for (let q = 0; q < currentSelectedQuantity; q++) {
         itemsWonList.push(rollFromCase(targetCase));
     }
 
-    // Dynamic Display Setups
     document.getElementById('rollerCaseTitle').innerText = `Opening ${currentSelectedQuantity}x ${targetCase.name}`;
-    document.getElementById('multiResultsContainer').innerHTML = '';
+    
+    // Clear and prepare Modal
+    const resultsGrid = document.getElementById('multiResultsContainer');
+    resultsGrid.innerHTML = ''; // Clear old items
     document.getElementById('modalClaimBtn').style.display = 'none';
     
+    // Reset Tape
     const tape = document.getElementById('rollerTape');
     tape.style.transition = 'none';
     tape.style.transform = 'translateX(0px)';
     tape.innerHTML = '';
 
-    // Last visual tape path uses the final rolled element for item visual syncs
-    let finalKeyElement = itemsWonList[itemsWonList.length - 1];
-
-    for(let i=0; i<35; i++) {
+    // Generate random items for the scroll, end with the last item in the list
+    for(let i=0; i<40; i++) {
         let card = document.createElement('div');
         card.className = 'roller-card-item';
-        let randomMockItem = (i === 28) ? finalKeyElement : itemPool[Math.floor(Math.random() * itemPool.length)];
+        let randomMockItem = (i === 35) ? itemsWonList[itemsWonList.length - 1] : itemPool[Math.floor(Math.random() * itemPool.length)];
         card.innerText = randomMockItem.emoji;
         tape.appendChild(card);
     }
 
     document.getElementById('unboxingModal').style.display = 'flex';
 
+    // Animation: Open "Stacked" cases (Revealing items one by one in the grid)
     setTimeout(() => {
-        tape.style.transition = 'transform 2.8s cubic-bezier(0.1, 0.8, 0.1, 1)';
-        tape.style.transform = 'translateX(-1960px)';
+        tape.style.transition = 'transform 3s cubic-bezier(0.1, 0.8, 0.1, 1)';
+        tape.style.transform = 'translateX(-2300px)';
     }, 50);
 
-    setTimeout(() => {
-        const resultsGrid = document.getElementById('multiResultsContainer');
-        resultsGrid.innerHTML = '';
-
-        itemsWonList.forEach(item => {
+    // Reveal sequence
+    itemsWonList.forEach((item, index) => {
+        setTimeout(() => {
             inventory.push(item);
             let resCard = document.createElement('div');
             resCard.className = 'bundle-result-card';
-            resCard.innerHTML = `<div>${item.emoji}</div><div style="font-size:11px;color:#ffca28;font-weight:bold;">${item.value} U</div>`;
+            resCard.innerHTML = `<div>${item.emoji}</div><div style="font-size:10px;color:#ffca28;">${item.value} U</div>`;
             resultsGrid.appendChild(resCard);
-        });
+            saveGame();
+        }, 2000 + (index * 200)); // Staggers the items appearing so it feels like a stack opening
+    });
 
-        saveGame();
+    setTimeout(() => {
         document.getElementById('modalClaimBtn').style.display = 'block';
-    }, 2950);
+    }, 3200);
 }
+
+// ... (Rest of your app logic remains the same)
 
 function closeUnboxModal() {
     document.getElementById('unboxingModal').style.display = 'none';
