@@ -4,16 +4,25 @@ let stats = JSON.parse(localStorage.getItem('stats')) || { upgradesTried: 0 };
 let bestPulls = JSON.parse(localStorage.getItem('bestPulls')) || [];
 let lastClickTime = 0;
 
+// Track what the user has currently tapped on in the grid
+let selectedWagerIndex = null;
+let selectedTargetIndex = null;
+
 window.onload = () => {
-    // Notify Telegram the app is ready
     if (window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); }
-    populateTargetShop();
+    renderUpgraderGrids();
     updateUI();
 };
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
+    document.getElementById('btn-' + tabId).classList.add('active');
+    
+    if(tabId === 'upgraderTab') {
+        renderUpgraderGrids();
+    }
 }
 
 function saveGame() {
@@ -28,37 +37,35 @@ function updateUI() {
     document.getElementById('balanceDisplay').innerText = balance.toFixed(1);
     document.getElementById('statUpgrades').innerText = stats.upgradesTried;
     
-    // Update Dropdown Inventory
-    const invSelect = document.getElementById('inventorySelect');
-    invSelect.innerHTML = '<option value="">-- Select Item --</option>';
-    
+    // Render Inventory Tab
     const profileInv = document.getElementById('profileInventory');
     profileInv.innerHTML = '';
-    
     inventory.forEach((item, index) => {
-        // Dropdown
-        let opt = document.createElement('option');
-        opt.value = index;
-        opt.innerText = `${item.name} (${item.value})`;
-        invSelect.appendChild(opt);
-        
-        // Profile Grid
-        let div = document.createElement('div');
-        div.className = 'item-box';
-        div.style.borderLeftColor = item.color;
-        div.innerHTML = `<strong>${item.name}</strong><br>Value: ${item.value}`;
-        profileInv.appendChild(div);
+        let card = document.createElement('div');
+        card.className = 'item-card';
+        card.style.borderColor = item.color;
+        card.innerHTML = `
+            <span class="emoji">${item.name.split(' ')[1] || '👾'}</span>
+            <span class="name" style="color:${item.color}">${item.name}</span>
+            <span class="price">${item.value} U</span>
+            <button class="sell-btn" onclick="sellItem(${index}, event)">Sell for ${(item.value * 0.7).toFixed(0)} U</button>
+        `;
+        profileInv.appendChild(card);
     });
 
-    // Update Leaderboard
+    // Render Local Leaderboard
     const leaderList = document.getElementById('leaderboardList');
     leaderList.innerHTML = '';
-    bestPulls.sort((a,b) => b.value - a.value).slice(0, 4).forEach(item => {
-        let div = document.createElement('div');
-        div.className = 'item-box';
-        div.style.borderLeftColor = item.color;
-        div.innerHTML = `<strong>${item.name}</strong><br>Value: ${item.value}`;
-        leaderList.appendChild(div);
+    [...bestPulls].sort((a,b) => b.value - a.value).slice(0, 4).forEach(item => {
+        let card = document.createElement('div');
+        card.className = 'item-card';
+        card.style.borderColor = item.color;
+        card.innerHTML = `
+            <span class="emoji">${item.name.split(' ')[1] || '👾'}</span>
+            <span class="name">${item.name}</span>
+            <span class="price">${item.value} U</span>
+        `;
+        leaderList.appendChild(card);
     });
 }
 
@@ -68,106 +75,185 @@ function clickCoin() {
         balance += 0.1;
         lastClickTime = now;
         document.getElementById('balanceDisplay').innerText = balance.toFixed(1);
-        localStorage.setItem('balance', balance); // Save silently to avoid UI lag
+        localStorage.setItem('balance', balance);
     }
 }
 
 function buyCase() {
-    if (balance < 10) return alert("Not enough u-coins!");
+    if (balance < 10) return alert("You don't have enough U-Coins!");
     balance -= 10;
     
     let base = baseItems[Math.floor(Math.random() * baseItems.length)];
-    let rarity = rarities[3]; // Default Normal
+    let rarity = rarities[3]; // Normal
     
-    let rarityRoll = Math.floor(Math.random() * 100) + 1; 
-    if (rarityRoll <= (100 / rarities[0].chance)) rarity = rarities[0];
-    else if (rarityRoll <= (100 / rarities[1].chance)) rarity = rarities[1];
-    else if (rarityRoll <= (100 / rarities[2].chance)) rarity = rarities[2];
+    let rarityRoll = Math.random() * 100;
+    if (rarityRoll <= 1.0) rarity = rarities[0]; // 1:100 Diamond
+    else if (rarityRoll <= 4.0) rarity = rarities[1]; // 1:25 Gold
+    else if (rarityRoll <= 20.0) rarity = rarities[2]; // 1:5 Silver
 
     let shinyRoll = Math.floor(Math.random() * 1000) + 1;
-    let isShiny = shinyRoll <= (1000 / shiny.chance);
+    let isShiny = (shinyRoll === 777);
     
     let finalValue = base.baseValue * rarity.multiplier * (isShiny ? shiny.multiplier : 1);
-    let fullName = (isShiny ? "Shiny " : "") + rarity.name + " " + base.name;
+    let fullName = (isShiny ? "✨ Shiny " : "") + rarity.name + " " + base.name;
     
-    let newItem = { name: fullName, value: finalValue, color: rarity.color };
+    let newItem = { name: fullName, value: finalValue, color: isShiny ? shiny.color : rarity.color };
     inventory.push(newItem);
     bestPulls.push(newItem);
     
     saveGame();
-    alert("You opened a case and got: " + fullName + "!");
+    alert(`Opened Capsule: ${fullName}!`);
 }
 
-function populateTargetShop() {
-    const targetSelect = document.getElementById('targetSelect');
-    targetSelect.innerHTML = '<option value="">-- Select Target --</option>';
-    targetShopSkins.forEach((skin, index) => {
-        let opt = document.createElement('option');
-        opt.value = index;
-        opt.innerText = `${skin.name} (${skin.value})`;
-        targetSelect.appendChild(opt);
+function sellItem(index, event) {
+    event.stopPropagation(); // Stops clicking the card backdrop
+    let item = inventory[index];
+    let payout = Math.floor(item.value * 0.7); // 70% buyback value rule
+    balance += payout;
+    inventory.splice(index, 1);
+    
+    // Clear selections if the sold item was staged
+    if(selectedWagerIndex === index) selectedWagerIndex = null;
+    
+    saveGame();
+    renderUpgraderGrids();
+}
+
+function renderUpgraderGrids() {
+    // 1. Wager Inventory Selection
+    const wagerGrid = document.getElementById('wagerGrid');
+    wagerGrid.innerHTML = '';
+    if(inventory.length === 0) wagerGrid.innerHTML = '<p style="grid-column:1/-1; color:#666;">Your inventory is empty.</p>';
+    
+    inventory.forEach((item, index) => {
+        let card = document.createElement('div');
+        card.className = `item-card ${selectedWagerIndex === index ? 'selected' : ''}`;
+        card.style.borderColor = item.color;
+        card.innerHTML = `
+            <span class="emoji">${item.name.split(' ')[1] || '👾'}</span>
+            <span class="name">${item.name}</span>
+            <span class="price">${item.value} U</span>
+        `;
+        card.onclick = () => {
+            selectedWagerIndex = index;
+            renderUpgraderGrids();
+            updateChance();
+        };
+        wagerGrid.appendChild(card);
+    });
+
+    // 2. Target Shop Showroom Selection
+    const targetGrid = document.getElementById('targetGrid');
+    targetGrid.innerHTML = '';
+    targetShopSkins.forEach((item, index) => {
+        let card = document.createElement('div');
+        card.className = `item-card ${selectedTargetIndex === index ? 'selected' : ''}`;
+        card.style.borderColor = item.color;
+        card.innerHTML = `
+            <span class="emoji">${item.name.split(' ')[1] || '👾'}</span>
+            <span class="name">${item.name}</span>
+            <span class="price">${item.value} U</span>
+        `;
+        card.onclick = () => {
+            selectedTargetIndex = index;
+            renderUpgraderGrids();
+            updateChance();
+        };
+        targetGrid.appendChild(card);
     });
 }
 
 function updateChance() {
-    const invSelect = document.getElementById('inventorySelect').value;
-    const targetSelect = document.getElementById('targetSelect').value;
-    if (invSelect === "" || targetSelect === "") return;
+    if (selectedWagerIndex === null || selectedTargetIndex === null) {
+        document.getElementById('chanceDisplay').innerText = "0.00%";
+        document.getElementById('upgraderWheel').style.background = `conic-gradient(#e74c3c 0deg 360deg)`;
+        return;
+    }
     
-    let chance = (inventory[invSelect].value / targetShopSkins[targetSelect].value) * 100;
+    let wagerItem = inventory[selectedWagerIndex];
+    let targetItem = targetShopSkins[selectedTargetIndex];
+    
+    let chance = (wagerItem.value / targetItem.value) * 100;
     if (chance > 100) chance = 100;
     
     document.getElementById('chanceDisplay').innerText = chance.toFixed(2) + "%";
     
-    // Update the visual wheel colors!
-    document.getElementById('upgraderWheel').style.background = `conic-gradient(#4caf50 0% ${chance}%, #e74c3c ${chance}% 100%)`;
+    // Centering the win zone (green) exactly at the bottom (180 degrees)
+    let halfSlice = (chance * 3.6) / 2;
+    let startGreen = 180 - halfSlice;
+    let endGreen = 180 + halfSlice;
     
-    // Reset the pointer position instantly
+    document.getElementById('upgraderWheel').style.background = `
+        conic-gradient(
+            #e74c3c 0deg ${startGreen}deg,
+            #34c759 ${startGreen}deg ${endGreen}deg,
+            #e74c3c ${endGreen}deg 360deg
+        )
+    `;
+    
     const pointer = document.getElementById('wheelPointer');
     pointer.style.transition = 'none';
     pointer.style.transform = 'rotate(0deg)';
 }
 
 function attemptUpgrade() {
-    const invIndex = document.getElementById('inventorySelect').value;
-    const targetIndex = document.getElementById('targetSelect').value;
+    if (selectedWagerIndex === null || selectedTargetIndex === null) return alert("Select your item and a target prize first!");
     
-    if (invIndex === "" || targetIndex === "") return alert("Select both items first!");
-    
-    let wagerItem = inventory[invIndex];
-    let targetItem = targetShopSkins[targetIndex];
+    let wagerItem = inventory[selectedWagerIndex];
+    let targetItem = targetShopSkins[selectedTargetIndex];
     
     let chance = (wagerItem.value / targetItem.value) * 100;
-    const isFast = document.getElementById('fastUpgrade').checked;
+    if (chance > 100) chance = 100;
     
+    const isFast = document.getElementById('fastUpgrade').checked;
     stats.upgradesTried += 1;
+    
     const btn = document.getElementById('upgradeBtn');
     const pointer = document.getElementById('wheelPointer');
     
-    // Reset pointer instantly before spinning
     pointer.style.transition = 'none';
     pointer.style.transform = 'rotate(0deg)';
-    pointer.offsetHeight; // Forces the browser to reset immediately
+    pointer.offsetHeight; // force paint update
     
-    // Calculate where the pointer should land
-    let roll = Math.random() * 100; // roll from 0 to 100
-    let rollDegree = (roll / 100) * 360; // converts roll to a 360 degree circle
-    let totalDegrees = 1800 + rollDegree; // Adds 5 full spins (1800 deg) for suspense
+    // Core upgrade system logic
+    let roll = Math.random() * 100;
+    let halfSlice = (chance * 3.6) / 2;
+    let targetDegree = 0;
+    let isWin = roll <= chance;
+    
+    if (isWin) {
+        // Safe land inside bottom green wedge: anywhere between (180 - halfSlice) and (180 + halfSlice)
+        targetDegree = (180 - halfSlice) + (Math.random() * (halfSlice * 2));
+    } else {
+        // Land inside red wedges
+        let leftRed = 180 - halfSlice;
+        let rightRed = 360 - (180 + halfSlice);
+        if (Math.random() > 0.5) {
+            targetDegree = Math.random() * leftRed;
+        } else {
+            targetDegree = (180 + halfSlice) + (Math.random() * rightRed);
+        }
+    }
+    
+    let totalSpins = 2160 + targetDegree; // 6 crisp, full background rotations for suspense
     
     function resolveUpgrade() {
-        inventory.splice(invIndex, 1); // Remove the wagered item
+        inventory.splice(selectedWagerIndex, 1);
         
-        if (roll <= chance) {
+        if (isWin) {
             inventory.push(targetItem);
             bestPulls.push(targetItem);
-            alert("SUCCESS! You upgraded to: " + targetItem.name);
+            alert(`🔥 SUCCESS! You won: ${targetItem.name}`);
         } else {
-            alert("CRASH! You lost your item.");
+            alert("💥 CRASH... Your item was destroyed.");
         }
-        btn.innerText = "UPGRADE";
+        
+        selectedWagerIndex = null; 
+        btn.innerText = "START UPGRADE";
         btn.disabled = false;
         saveGame();
-        updateChance(); // Resets wheel for next time
+        renderUpgraderGrids();
+        updateChance();
     }
     
     if (isFast) {
@@ -175,13 +261,8 @@ function attemptUpgrade() {
     } else {
         btn.innerText = "UPGRADING...";
         btn.disabled = true;
-        
-        // Spin the wheel! 'cubic-bezier' makes it slow down realistically
-        pointer.style.transition = 'transform 3.5s cubic-bezier(0.1, 0.7, 0.1, 1)'; 
-        pointer.style.transform = `rotate(${totalDegrees}deg)`;
-        
-        // Wait exactly 3.6 seconds for the animation to finish before showing the result
-        setTimeout(resolveUpgrade, 3600); 
+        pointer.style.transition = 'transform 4s cubic-bezier(0.15, 0.85, 0.2, 1)';
+        pointer.style.transform = `rotate(${totalSpins}deg)`;
+        setTimeout(resolveUpgrade, 4100);
     }
 }
-
