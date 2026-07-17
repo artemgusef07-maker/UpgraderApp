@@ -3,590 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Case Clicker & Multi-Upgrader</title>
+    <title>Sleek Simulator</title>
     <style>
-        /* ==========================================
-           CORE STYLES & THEMING
-           ========================================== */
+        /* ==========================================================================
+           MINIMALIST DARK THEMING & TRANSITIONS
+           ========================================================================== */
+        :root {
+            --bg-main: #0b0b0f;
+            --bg-card: #12121a;
+            --bg-inner: #181824;
+            --border-color: #222230;
+            --accent-gold: #ffb300;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --text-main: #e2e2e9;
+            --text-muted: #6c6c84;
+            --radius: 8px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f0f14;
-            color: #fff;
-            user-select: none;
-            -webkit-user-select: none;
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main); color: var(--text-main);
+            user-select: none; -webkit-user-select: none;
         }
 
-        .app-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #161622;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 20px rgba(0,0,0,0.6);
-            position: relative;
+        .app-wrapper {
+            max-width: 520px; margin: 0 auto;
+            background-color: var(--bg-card); min-height: 100vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8); position: relative;
         }
 
-        /* HEADER BAR STYLING */
-        .header-bar {
-            background-color: #1c1c28;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #2b2b3d;
+        /* PREMIUM HEADER DESIGN */
+        .app-header {
+            background-color: rgba(18, 18, 26, 0.85);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 16px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100;
         }
 
-        .balance-container {
-            font-size: 18px;
-            font-weight: bold;
-            color: #ffca28;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .balance-box {
+            font-size: 19px; font-weight: 700; color: var(--accent-gold);
+            display: flex; align-items: center; gap: 6px; letter-spacing: -0.5px;
         }
 
-        .header-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .header-btn {
-            background: #252538;
-            color: #fff;
-            border: 1px solid #3d3d5c;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-        .header-btn:hover { background: #32324d; }
-        .reset-btn { background: #db4437; border-color: #ff6b6b; }
-        .reset-btn:hover { background: #c23b2b; }
-
-        /* NAVIGATION TABS STYLING */
-        .nav-tabs {
-            display: flex;
-            background-color: #1c1c28;
-            border-bottom: 1px solid #2b2b3d;
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 12px 0;
-            cursor: pointer;
-            font-weight: bold;
-            color: #8a8a9e;
-            transition: all 0.2s;
-            border-bottom: 3px solid transparent;
-            background: none;
-            border-top: none;
-            border-left: none;
-            border-right: none;
-            font-size: 14px;
-        }
-        .nav-item.active {
-            color: #ffca28;
-            border-bottom-color: #ffca28;
-            background-color: #222230;
-        }
-
-        /* MAIN TAB PANES */
-        .tab-content {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        .tab-pane {
-            display: none;
-        }
-        .tab-pane.active-tab {
-            display: block;
-        }
-
-        /* GRID COMPONENTS */
-        .case-grid, .wager-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .case-row-card {
-            background: #222230;
-            border: 1px solid #2b2b3d;
-            border-radius: 10px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.1s, border-color 0.2s;
-        }
-        .case-row-card:hover { border-color: #4a4a6b; transform: translateY(-2px); }
+        .header-controls { display: flex; gap: 8px; }
         
-        .case-details { display: flex; flex-direction: column; gap: 4px; }
-        .case-title { font-weight: bold; font-size: 15px; }
-        .case-odds-preview { font-size: 11px; color: #8a8a9e; }
-        .case-price-tag { background: #ffca28; color: #000; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 13px; }
+        .btn-action {
+            background: var(--bg-inner); color: var(--text-main);
+            border: 1px solid var(--border-color); padding: 7px 14px;
+            border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 12px;
+            transition: var(--transition); letter-spacing: 0.3px;
+        }
+        .btn-action:hover { background: #1f1f2e; border-color: #33334d; }
+        .btn-reset { color: var(--accent-red); border-color: rgba(231,76,60,0.2); }
+        .btn-reset:hover { background: rgba(231,76,60,0.1); border-color: var(--accent-red); }
 
-        /* UPGRADER DASHBOARD */
-        .upgrader-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .upgrader-workspace {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr 1fr;
-            gap: 10px;
-            background: #1c1c28;
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid #2b2b3d;
-        }
-
-        .workspace-column {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .column-title {
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-            color: #8a8a9e;
-            text-transform: uppercase;
-        }
-
-        .grid-panel {
-            height: 220px;
-            overflow-y: auto;
-            background: #111116;
-            padding: 6px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .mini-item-card {
-            background: #222230;
-            border: 1px solid #2b2b3d;
-            border-radius: 6px;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .mini-item-card.selected { border-color: #ffca28; background: #2d2d42; }
-        .mic-emoji { font-size: 18px; }
-        .mic-val { font-weight: bold; color: #ffca28; }
+        /* MINIMALIST SMOOTH TABS */
+        .nav-tabs-bar { display: flex; background: #0e0e14; padding: 4px; margin: 12px 16px; border-radius: 10px; }
         
-        .quick-sell-btn {
-            background: rgba(219, 68, 55, 0.2);
-            color: #ff6b6b;
-            border: 1px solid #ff6b6b;
-            font-size: 9px;
-            padding: 2px 4px;
-            border-radius: 4px;
-            cursor: pointer;
+        .tab-trigger {
+            flex: 1; text-align: center; padding: 10px 0; cursor: pointer; font-weight: 600;
+            color: var(--text-muted); background: none; border: none; font-size: 13px;
+            border-radius: 8px; transition: var(--transition);
         }
+        .tab-trigger.active { color: #fff; background: var(--bg-card); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 
-        /* THE UPGRADER WHEEL UNIT */
-        .wheel-space {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+        .tab-viewport { flex: 1; padding: 0 16px 24px 16px; overflow-y: auto; }
+        .tab-view { display: none; }
+        .tab-view.active-view { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* UNIFIED GRID LAYOUTS */
+        .display-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+        .case-element-card {
+            background: var(--bg-inner); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 16px; display: flex;
+            justify-content: space-between; align-items: center; cursor: pointer;
+            transition: var(--transition);
         }
+        .case-element-card:hover { border-color: #33334d; transform: translateY(-1px); }
+        .case-name { font-weight: 600; font-size: 14px; color: #fff; }
+        .case-cost { font-size: 12px; color: var(--accent-gold); font-weight: 700; background: rgba(255,179,0,0.08); padding: 4px 8px; border-radius: 6px; }
 
-        .wheel-outer {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: #e74c3c;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-
-        .wheel-core {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: #1c1c28;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .wheel-pointer-needle {
-            width: 4px;
-            height: 65px;
-            background: #ffffff;
-            position: absolute;
-            bottom: 50%;
-            left: calc(50% - 2px);
-            transform-origin: bottom center;
-            z-index: 3;
-            border-radius: 2px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.8);
-        }
-
-        #chanceDisplay { font-size: 16px; font-weight: bold; color: #fff; }
-        .wheel-lbl { font-size: 9px; color: #8a8a9e; text-transform: uppercase; }
-
-        /* STAGING ACCORDION SLOTS */
-        .staging-docks {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
+        /* UPGRADER LAYOUT MECHANICS */
+        .upgrader-suite { display: flex; flex-direction: column; gap: 16px; }
+        
+        .docking-bay { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .dock-slot {
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 40px;
-            font-weight: bold;
+            padding: 12px; border-radius: var(--radius); text-align: center;
+            font-size: 13px; display: flex; flex-direction: column; justify-content: center;
+            align-items: center; min-height: 44px; font-weight: 600; transition: var(--transition);
         }
-        .dock-slot.empty { background: #111116; border: 1px dashed #3d3d5c; color: #5c5c7a; }
-        .dock-slot.active { background: #222230; border: 1px solid #ffca28; color: #fff; }
+        .dock-slot.empty { background: var(--bg-inner); border: 1px dashed #2b2b3d; color: var(--text-muted); }
+        .dock-slot.active { background: #1a1a26; border: 1px solid var(--accent-gold); color: #fff; }
 
-        /* PRESET CONTROLS & UTILITIES */
-        .preset-row { display: flex; gap: 5px; justify-content: center; width: 100%; margin-top: 5px; }
-        .preset-btn { flex: 1; padding: 5px 2px; font-size: 10px; background: #252538; border: 1px solid #3d3d5c; color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .engine-deck {
+            display: grid; grid-template-columns: 1.1fr 1.3fr 1.1fr; gap: 12px;
+            background: var(--bg-inner); padding: 14px; border-radius: 12px; border: 1px solid var(--border-color);
+        }
+        .deck-column { display: flex; flex-direction: column; gap: 8px; }
+        .deck-title { text-align: center; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         
-        .action-block { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
-        .main-action-btn { background: #ffca28; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; letter-spacing: 0.5px; }
-        .main-action-btn:disabled { background: #4a4a5a; color: #8a8a9e; cursor: not-allowed; }
-        .option-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #8a8a9e; }
-
-        /* COIN CLICKER AREA (PROFILE) */
-        .clicker-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            background: #1c1c28;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #2b2b3d;
-        }
-        .giant-coin {
-            width: 110px;
-            height: 110px;
-            background: linear-gradient(135deg, #ffca28, #d4af37);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 45px;
-            cursor: pointer;
-            box-shadow: 0 8px 0 #b59426, 0 0 15px rgba(255,202,40,0.4);
-            transition: transform 0.05s;
-        }
-        .giant-coin:active { transform: translateY(4px); box-shadow: 0 4px 0 #b59426, 0 0 10px rgba(255,202,40,0.3); }
-
-        .stats-row {
-            display: flex;
-            width: 90%;
-            justify-content: space-around;
-            margin-top: 15px;
-            border-top: 1px solid #2b2b3d;
-            padding-top: 12px;
-            font-size: 13px;
-        }
-        .stat-item { text-align: center; }
-        .stat-val { display: block; font-size: 16px; font-weight: bold; color: #ffca28; margin-top: 2px; }
-
-        /* MODAL WINDOW BACKDROPS */
-        .modal-backdrop {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+        .scroll-tray {
+            height: 240px; overflow-y: auto; background: rgba(0,0,0,0.2);
+            padding: 6px; border-radius: var(--radius); display: flex; flex-direction: column; gap: 6px;
         }
 
-        .roller-window {
-            background: #1c1c24;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #3d3d5c;
-            width: 88%;
-            max-width: 450px;
-            box-sizing: border-box;
+        .item-capsule {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 10px; display: flex; align-items: center;
+            justify-content: space-between; cursor: pointer; font-size: 12px; transition: var(--transition);
         }
-        .roller-title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 15px; color: #fff; }
+        .item-capsule:hover { border-color: #3a3a52; }
+        .item-capsule.selected { border-color: var(--accent-gold); background: #1c1c2b; }
+        .cap-value { font-weight: 700; color: var(--accent-gold); }
+        .btn-sell-quick { background: none; border: none; color: var(--accent-red); font-size: 10px; cursor: pointer; padding: 2px 0; font-weight: 600; }
 
-        /* QUANTITY AND INSPECTION STYLES */
-        .qty-row { display: flex; gap: 6px; margin: 15px 0; }
-        .qty-btn { flex: 1; padding: 8px; background: #252538; border: 1px solid #3d3d5c; color: #fff; font-weight: bold; border-radius: 6px; cursor: pointer; }
-        .qty-btn.active { background: #ffca28; color: #000; border-color: #ffca28; }
+        /* THE CHANCE RADAR CORES */
+        .radar-center-hub { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .circular-radar {
+            width: 130px; height: 130px; border-radius: 50%; background: var(--accent-red);
+            position: relative; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: background 0.3s ease;
+        }
+        .radar-inner-shield { width: 96px; height: 96px; border-radius: 50%; background: var(--bg-inner); z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .radar-indicator-needle { width: 3px; height: 60px; background: #fff; position: absolute; bottom: 50%; left: calc(50% - 1.5px); transform-origin: bottom center; z-index: 3; border-radius: 2px; }
+
+        .control-row { display: flex; gap: 4px; width: 100%; margin-top: 4px; }
+        .btn-preset { flex: 1; padding: 6px 2px; font-size: 11px; background: var(--bg-card); border: 1px solid var(--border-color); color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; transition: var(--transition); }
+        .btn-preset:hover { background: #1d1d2b; border-color: #44445c; }
+
+        .execution-block { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+        .btn-trigger-launch { background: var(--accent-gold); color: #000; border: none; padding: 14px; border-radius: var(--radius); font-weight: 700; font-size: 14px; cursor: pointer; width: 100%; transition: var(--transition); }
+        .btn-trigger-launch:disabled { background: #222230; color: var(--text-muted); cursor: not-allowed; }
         
-        .inspect-scroll { max-height: 180px; overflow-y: auto; background: #111116; padding: 8px; border-radius: 8px; margin-bottom: 15px; }
-        .inspect-item-row { display: flex; justify-content: space-between; padding: 6px 4px; font-size: 13px; border-bottom: 1px solid #22222b; }
-        .inspect-item-left { display: flex; gap: 8px; }
-        .inspect-item-price { color: #ffca28; font-weight: bold; }
-        .inspect-item-chance { color: #8a8a9e; }
+        /* COIN INTERACTIVE (INVENTORY TAB) */
+        .generator-station { display: flex; flex-direction: column; align-items: center; padding: 24px 0; background: var(--bg-inner); border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--border-color); }
+        .interactive-coin { width: 100px; height: 100px; background: linear-gradient(135deg, #ffca28, #d4af37); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; cursor: pointer; box-shadow: 0 6px 0 #b59426, 0 10px 20px rgba(0,0,0,0.3); transition: transform 0.05s; }
+        .interactive-coin:active { transform: translateY(4px); box-shadow: 0 2px 0 #b59426, 0 4px 10px rgba(0,0,0,0.3); }
 
-        /* VIEWPORT LANES (UNBOXING ANIMATION) */
-        .roller-viewport {
-            position: relative;
-            width: 100%;
-            height: 75px;
-            overflow: hidden;
-            background: #111116;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            border: 1px solid #2b2b3d;
-        }
-        .roller-center-line {
-            position: absolute;
-            left: 50%; top: 0; bottom: 0; width: 2px;
-            background: #ffca28;
-            z-index: 10;
-            transform: translateX(-50%);
-        }
-        .roller-tape { display: flex; width: max-content; transform: translateX(0); }
-        .roller-card-item {
-            width: 75px; height: 75px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; background: #1c1c28;
-            border-right: 1px solid #111116;
-            flex-shrink: 0; box-sizing: border-box;
-        }
+        .metrics-grid { display: flex; width: 90%; justify-content: space-around; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px; font-size: 12px; color: var(--text-muted); font-weight: 600; }
+        .metric-value { display: block; font-size: 16px; font-weight: 700; color: #fff; margin-top: 2px; }
 
-        .results-bundle-grid { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-height: 110px; overflow-y: auto; margin-top: 10px; }
-        .bundle-result-card { background: #222230; border: 1px solid #ffca28; border-radius: 6px; width: 45px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 18px; }
-        .modal-claim-btn { width: 100%; padding: 12px; background: #34c759; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        /* OVERLAYS & DIALOGS MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,8,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.2s ease; }
+        .modal-panel { background: var(--bg-card); padding: 24px; border-radius: 16px; border: 1px solid var(--border-color); width: 88%; max-width: 420px; box-sizing: border-box; }
+        
+        .button-group-row { display: flex; gap: 6px; margin: 16px 0; }
+        .btn-selector { flex: 1; padding: 10px; background: var(--bg-inner); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; border-radius: 6px; cursor: pointer; transition: var(--transition); }
+        .btn-selector.active { background: var(--accent-gold); color: #000; border-color: var(--accent-gold); }
+        
+        .scroll-list-panel { max-height: 160px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: var(--radius); margin-bottom: 16px; }
+        .list-row-entry { display: flex; justify-content: space-between; padding: 8px 4px; font-size: 13px; border-bottom: 1px solid var(--border-color); }
 
-        /* COLLECTION INDEX STYLING */
-        .index-item-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 5px;
-            border-radius: 8px;
-            background: #111116;
-            border: 1px solid #22222b;
-            transition: all 0.2s ease;
-        }
-        .index-item-card.unlocked { border-color: #ffca28; background: #1a1a24; }
-        .index-item-card.locked { opacity: 0.35; }
-        .idx-emoji { font-size: 22px; margin-bottom: 4px; }
-        .idx-val { font-size: 10px; font-weight: bold; }
+        /* MULTI-ROW VIEWPORTS SPEED RUNNERS */
+        .lane-viewport { position: relative; width: 100%; height: 64px; overflow: hidden; background: #09090d; margin-bottom: 8px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .lane-crosshair { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--accent-gold); z-index: 10; transform: translateX(-50%); }
+        .lane-conveyor { display: flex; width: max-content; transform: translateX(0); }
+        .lane-box-node { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: var(--bg-inner); border-right: 1px solid #09090d; flex-shrink: 0; box-sizing: border-box; }
+
+        .rewards-matrix-box { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-height: 100px; overflow-y: auto; margin-top: 12px; }
+        .reward-pill { background: var(--bg-inner); border: 1px solid var(--border-color); border-radius: 6px; width: 44px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 16px; }
+        .btn-modal-primary { width: 100%; padding: 12px; background: var(--accent-green); color: #fff; border: none; border-radius: var(--radius); font-weight: 700; cursor: pointer; font-size: 14px; transition: var(--transition); }
+        .btn-modal-cancel { width: 100%; padding: 12px; background: none; border: 1px solid var(--border-color); color: var(--text-muted); border-radius: var(--radius); font-weight: 600; cursor: pointer; margin-top: 8px; font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-wrapper">
         
-        <!-- ==========================================
-             1. CORE TOP HEADER BAR
-             ========================================== -->
-        <div class="header-bar">
-            <div class="balance-container">
-                <span>💰</span><span id="balanceDisplay">500.0</span><span>U</span>
+        <!-- HEADER COMPONENT -->
+        <div class="app-header">
+            <div class="balance-box">
+                <span>🪙</span><span id="balanceDisplay">500.0</span><span>U</span>
             </div>
-            <div class="header-actions">
-                <button class="header-btn" onclick="openIndexModal()">🎴 INDEX</button>
-                <button class="header-btn reset-btn" onclick="clearLegacyData()">RESET</button>
+            <div class="header-controls">
+                <button class="btn-action" onclick="openIndexModal()">🎴 INDEX</button>
+                <button class="btn-action btn-reset" onclick="clearLegacyData()">RESET</button>
             </div>
         </div>
 
-        <!-- ==========================================
-             2. TAB NAVIGATION SYSTEM
-             ========================================== -->
-        <div class="nav-tabs">
-            <button id="btn-casesTab" class="nav-item active" onclick="switchTab('casesTab')">📦 CASES</button>
-            <button id="btn-upgraderTab" class="nav-item" onclick="switchTab('upgraderTab')">⚡ UPGRADER</button>
-            <button id="btn-profileTab" class="nav-item" onclick="switchTab('profileTab')">👤 VAULT</button>
+        <!-- NAVIGATION CONTROLLER -->
+        <div class="nav-tabs-bar">
+            <button id="btn-casesTab" class="tab-trigger active" onclick="switchTab('casesTab')">📦 CASES</button>
+            <button id="btn-upgraderTab" class="tab-trigger" onclick="switchTab('upgraderTab')">⚡ UPGRADER</button>
+            <button id="btn-profileTab" class="tab-trigger" onclick="switchTab('profileTab')">🎒 INVENTORY</button>
         </div>
 
-        <!-- ==========================================
-             3. APP CONTENT WORKSPACE
-             ========================================== -->
-        <div class="tab-content">
+        <!-- MAIN SPAWN WINDOW -->
+        <div class="tab-viewport">
             
-            <!-- CASES TAB MODULE -->
-            <div id="casesTab" class="tab-pane active-tab">
-                <div id="caseMenuGrid" class="case-grid">
-                    <!-- Dynamic case cards loaded via app.js -->
-                </div>
+            <!-- CASES PANEL -->
+            <div id="casesTab" class="tab-view active-view">
+                <div id="caseMenuGrid" class="display-grid"></div>
             </div>
 
-            <!-- MULTI-ITEM UPGRADER TAB MODULE -->
-            <div id="upgraderTab" class="tab-pane">
-                <div class="upgrader-container">
+            <!-- UPGRADER CONTROLLER -->
+            <div id="upgraderTab" class="tab-view">
+                <div class="upgrader-suite">
                     
-                    <!-- Docks for staging item visualization -->
-                    <div class="staging-docks">
+                    <div class="docking-bay">
                         <div id="stageWager" class="dock-slot empty">Select Wager</div>
                         <div id="stageTarget" class="dock-slot empty">Select Target</div>
                     </div>
 
-                    <!-- Core engine workspace -->
-                    <div class="upgrader-workspace">
-                        
-                        <!-- Left Panel: Inventory Wagers -->
-                        <div class="workspace-column">
-                            <span class="column-title">Wager (Max 6)</span>
-                            <div id="wagerGrid" class="grid-panel"></div>
+                    <div class="engine-deck">
+                        <div class="deck-column">
+                            <span class="deck-title">Wagers</span>
+                            <div id="wagerGrid" class="scroll-tray"></div>
                         </div>
 
-                        <!-- Middle Panel: Wheel Calculator Engine -->
-                        <div class="wheel-space">
-                            <div id="upgraderWheel" class="wheel-outer">
-                                <div id="wheelPointer" class="wheel-pointer-needle"></div>
-                                <div class="wheel-core">
+                        <div class="radar-center-hub">
+                            <div id="upgraderWheel" class="circular-radar">
+                                <div id="wheelPointer" class="radar-indicator-needle"></div>
+                                <div class="radar-inner-shield">
                                     <span id="chanceDisplay">0.00%</span>
-                                    <span class="wheel-lbl">Chance</span>
+                                    <span style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Win Odds</span>
                                 </div>
                             </div>
                             
-                            <!-- Multiplier & Percentage Target Presets -->
-                            <div class="preset-row">
-                                <button class="preset-btn" onclick="applyPresetMultiplier(2)">2x</button>
-                                <button class="preset-btn" onclick="applyPresetMultiplier(5)">5x</button>
-                                <button class="preset-btn" onclick="applyPresetMultiplier(10)">10x</button>
+                            <!-- Updated Presets Controls Grid -->
+                            <div class="control-row">
+                                <button class="btn-preset" onclick="applyPresetMultiplier(2)">2x</button>
+                                <button class="btn-preset" onclick="applyPresetMultiplier(5)">5x</button>
+                                <button class="btn-preset" onclick="applyPresetMultiplier(10)">10x</button>
                             </div>
-                            <div class="preset-row">
-                                <button class="preset-btn" onclick="applyPresetChance(10)">10%</button>
-                                <button class="preset-btn" onclick="applyPresetChance(25)">25%</button>
-                                <button class="preset-btn" onclick="applyPresetChance(50)">50%</button>
+                            <div class="control-row">
+                                <button class="btn-preset" onclick="applyPresetChance(35)">35%</button>
+                                <button class="btn-preset" onclick="applyPresetChance(55)">55%</button>
+                                <button class="btn-preset" onclick="applyPresetChance(75)">75%</button>
                             </div>
                         </div>
 
-                        <!-- Right Panel: Upgrader Target Pool Selection -->
-                        <div class="workspace-column">
-                            <span class="column-title">Targets</span>
-                            <div id="targetGrid" class="grid-panel"></div>
+                        <div class="deck-column">
+                            <span class="deck-title">Targets</span>
+                            <div id="targetGrid" class="scroll-tray"></div>
                         </div>
-
                     </div>
 
-                    <!-- Execution triggers -->
-                    <div class="action-block">
-                        <button id="upgradeBtn" class="main-action-btn" onclick="attemptUpgrade()">START UPGRADE</button>
-                        <div class="option-toggle">
-                            <input type="checkbox" id="fastUpgrade">
-                            <label {{style="cursor:pointer;"}} for="fastUpgrade">Instant Resolution (Skip Animation)</label>
+                    <div class="execution-block">
+                        <button id="upgradeBtn" class="btn-trigger-launch" onclick="attemptUpgrade()">START CALCULATED UPGRADE</button>
+                        <div style="display:flex; justify-content:center; gap:6px; font-size:12px; color:var(--text-muted);">
+                            <input type="checkbox" id="fastUpgrade" style="cursor:pointer;">
+                            <label style="cursor:pointer;" for="fastUpgrade">Instant Resolution Matrix</label>
                         </div>
                     </div>
 
                 </div>
             </div>
 
-            <!-- VAULT / PROFILE TAB MODULE -->
-            <div id="profileTab" class="tab-pane">
-                
-                <!-- Clicking Generation Core -->
-                <div class="clicker-box">
-                    <div class="giant-coin" onclick="clickCoin()">🪙</div>
-                    <div class="stats-row">
-                        <div class="stat-item">Upgrades tried<span id="statUpgrades" class="stat-val">0</span></div>
-                        <div class="stat-item">Items owned<span id="statItemsCount" class="stat-val">0</span></div>
+            <!-- INVENTORY PROFILE HOVER LAYER -->
+            <div id="profileTab" class="tab-view">
+                <div class="generator-station">
+                    <div class="interactive-coin" onclick="clickCoin()">🪙</div>
+                    <div class="metrics-grid">
+                        <div style="text-align:center;">Upgrades Processed<span id="statUpgrades" class="metric-value">0</span></div>
+                        <div style="text-align:center;">Vault Holdings<span id="statItemsCount" class="metric-value">0</span></div>
                     </div>
                 </div>
 
-                <!-- Comprehensive personal items sub-grid -->
-                <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #8a8a9e;">YOUR INVENTORY ITEM VAULT:</div>
-                <div id="profileInventory" class="wager-grid" style="grid-template-columns: repeat(3, 1fr); max-height: 260px; overflow-y: auto; background:#111116; padding:8px; border-radius:8px;">
-                    <!-- Population injected via app.js -->
-                </div>
-
+                <div style="font-size: 11px; font-weight: 700; margin-bottom: 8px; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Storage Safe Units:</div>
+                <div id="profileInventory" class="display-grid" style="grid-template-columns: repeat(3, 1fr); gap:6px; max-height: 280px; overflow-y: auto; background:rgba(0,0,0,0.15); padding:8px; border-radius:var(--radius);"></div>
             </div>
 
         </div>
 
     </div>
 
-    <!-- ==========================================
-         4. OVERLAY DIALOGS & ACTION MODALS
-         ========================================== -->
-    
-    <!-- INSPECT CASE DETAILS MODAL -->
-    <div id="caseDetailsModal" class="modal-backdrop" style="display:none;">
-        <div class="roller-window">
-            <div id="inspectCaseName" class="roller-title">Case Contents</div>
-            
-            <div class="inspect-scroll" id="inspectItemsList">
-                <!-- Drop rates rows go here -->
+    <!-- INSPECT POPUP BOX OVERLAY -->
+    <div id="caseDetailsModal" class="modal-overlay" style="display:none;">
+        <div class="modal-panel">
+            <div id="inspectCaseName" class="roller-title" style="font-size:16px; font-weight:700; text-align:center; margin-bottom:12px;">Inspection Box</div>
+            <div class="scroll-list-panel" id="inspectItemsList"></div>
+
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; text-transform:uppercase;">Drop Multi-Batch Value:</div>
+            <div class="button-group-row">
+                <button id="qty-1" class="btn-selector active" onclick="setUnboxQuantity(1)">1x</button>
+                <button id="qty-2" class="btn-selector" onclick="setUnboxQuantity(2)">2x</button>
+                <button id="qty-3" class="btn-selector" onclick="setUnboxQuantity(3)">3x</button>
+                <button id="qty-4" class="btn-selector" onclick="setUnboxQuantity(4)">4x</button>
+                <button id="qty-5" class="btn-selector" onclick="setUnboxQuantity(5)">5x</button>
             </div>
 
-            <div style="font-size: 11px; color: #8a8a9e; font-weight: bold; margin-bottom: 4px;">CHOOSE QUANTITY:</div>
-            <div class="qty-row">
-                <button id="qty-1" class="qty-btn active" onclick="setUnboxQuantity(1)">1x</button>
-                <button id="qty-2" class="qty-btn" onclick="setUnboxQuantity(2)">2x</button>
-                <button id="qty-3" class="qty-btn" onclick="setUnboxQuantity(3)">3x</button>
-                <button id="qty-4" class="qty-btn" onclick="setUnboxQuantity(4)">4x</button>
-                <button id="qty-5" class="qty-btn" onclick="setUnboxQuantity(5)">5x</button>
-            </div>
-
-            <button class="modal-claim-btn" style="background:#ffca28; color:#000; margin-bottom: 8px;" onclick="confirmCasePurchase()">
-                BUY & UNBOX FOR <span id="totalCaseCostDisplay">0</span> U
+            <button class="btn-modal-primary" style="background:var(--accent-gold); color:#000;" onclick="confirmCasePurchase()">
+                ACQUIRE FOR <span id="totalCaseCostDisplay">0</span> U
             </button>
-            <button class="modal-claim-btn" style="background:#252538; color:#fff;" onclick="closeInspectModal()">CANCEL</button>
+            <button class="btn-modal-cancel" onclick="closeInspectModal()">DISMISS</button>
         </div>
     </div>
 
-    <!-- PARALLEL MULTI-LANE UNBOXING CAROUSEL MODAL -->
-    <div id="unboxingModal" class="modal-backdrop" style="display:none;">
-        <div class="roller-window" style="max-width:480px;">
-            <div id="rollerCaseTitle" class="roller-title">Opening Case...</div>
-            
-            <!-- Parallel row lanes layout engine -->
+    <!-- MACHINE CALCULATOR DISPLAY UNBOX SYSTEM -->
+    <div id="unboxingModal" class="modal-overlay" style="display:none;">
+        <div class="modal-panel" style="max-width:440px;">
+            <div id="rollerCaseTitle" class="roller-title" style="font-size:15px; font-weight:700; text-align:center; margin-bottom:12px;">Unboxing Processing...</div>
             <div id="multiRollersWrapper"></div>
-
-            <!-- Dynamic rewards landing bay -->
-            <div id="multiResultsContainer" class="results-bundle-grid"></div>
-
-            <div id="modalClaimBtn" style="margin-top:15px; display:none;">
-                <button class="modal-claim-btn" onclick="closeUnboxModal()">CLAIM ITEMS</button>
+            <div id="multiResultsContainer" class="rewards-matrix-box"></div>
+            <div id="modalClaimBtn" style="margin-top:16px; display:none;">
+                <button class="btn-modal-primary" onclick="closeUnboxModal()">TRANSFER TO BACKPACK</button>
             </div>
         </div>
     </div>
 
-    <!-- ITEM COLLECTION BOOK INDEX MODAL -->
-    <div id="itemIndexModal" class="modal-backdrop" style="display:none; z-index:9999;">
-        <div class="roller-window" style="max-width:450px; max-height:85vh; overflow-y:auto;">
-            <div class="roller-title">Collection Index</div>
-            <div style="color:#8a8a9e; font-size:12px; margin-bottom:15px; text-align:center;">
-                Unlock items by finding them in cases or winning upgrades!
-            </div>
-            <div id="indexGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                <!-- Full pool items grid generated dynamically -->
-            </div>
-            <button class="modal-claim-btn" onclick="closeIndexModal()" style="margin-top:20px; background:#252538; color:#fff; border: 1px solid #3d3d5c;">CLOSE INDEX</button>
+    <!-- BOOK INDEX MODAL -->
+    <div id="itemIndexModal" class="modal-overlay" style="display:none; z-index:9999;">
+        <div class="modal-panel" style="max-width:420px; max-height:80vh; display:flex; flex-direction:column;">
+            <div class="roller-title" style="font-size:16px; font-weight:700; text-align:center; margin-bottom:4px;">Item Index Archive</div>
+            <div style="color:var(--text-muted); font-size:12px; margin-bottom:16px; text-align:center;">Historical log book trackers</div>
+            <div id="indexGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 6px; overflow-y:auto; flex:1; padding-right:2px;"></div>
+            <button class="btn-modal-cancel" onclick="closeIndexModal()" style="margin-top:16px; width:100%;">CLOSE CATALOGUE</button>
         </div>
     </div>
 
-    <!-- ==========================================
-         5. PERSISTENT BACKEND SCRIPTS INJECTION
-         ========================================== -->
+    <!-- LOADS DEFINED DATABASES -->
     <script src="itemPool.js"></script>
     <script src="app.js"></script>
 </body>
