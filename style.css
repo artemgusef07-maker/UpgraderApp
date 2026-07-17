@@ -1,135 +1,169 @@
 body {
-    background-color: #08080c;
+    background-color: #050508;
     color: #e4e4ed;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+/* Force clean mobile dimensions */
+.phone-wrapper {
+    width: 100%;
+    max-width: 420px;
+    background-color: #0b0b11;
+    min-height: 100vh;
+    box-sizing: border-box;
     padding: 16px;
-    padding-bottom: 90px;
-    user-select: none;
+    padding-top: 76px;
+    padding-bottom: 84px;
+    position: relative;
 }
-/* Header Elements */
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.balance-pill {
-    background: #11111c; border: 1px solid #1f1f35; padding: 8px 16px;
-    border-radius: 20px; font-weight: bold; font-size: 18px; color: #ffca28;
+/* Sticky Top Header */
+.app-header {
+    position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 420px; height: 60px; background: #0f0f18;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 16px; box-sizing: border-box; border-bottom: 1px solid #1a1a26; z-index: 800;
 }
-.reset-pill {
-    background: #211313; border: 1px solid #421c1c; color: #ff6b6b;
-    padding: 6px 12px; border-radius: 14px; font-size: 11px; font-weight: bold; cursor: pointer;
+.u-coin-balance {
+    background: #171725; padding: 6px 14px; border-radius: 20px;
+    display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px;
 }
-
-/* Centralized Visual Hubs */
-.visual-hub { display: flex; flex-direction: column; align-items: center; padding: 40px 0; }
-.main-tap-sphere {
-    background: radial-gradient(circle, #1c1c2e 0%, #0f0f17 100%);
-    width: 170px; height: 170px; border-radius: 50%; border: 4px solid #2d2d44;
-    font-size: 70px; cursor: pointer; box-shadow: 0 12px 30px rgba(0,0,0,0.6);
-    transition: transform 0.05s, border-color 0.2s;
+.coin-logo {
+    background: linear-gradient(145deg, #ffd700, #ffa500); color: #000;
+    width: 22px; height: 22px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 13px; font-weight: 900;
 }
-.main-tap-sphere:active { transform: scale(0.94); border-color: #5856d6; }
-.tap-subtext { color: #6e6e77; font-size: 13px; margin-top: 12px; font-weight: 500; }
-
-/* Engine Deck & Upgrader Area */
-.engine-deck {
-    background: #0f0f17; border: 1px solid #1b1b2b; padding: 20px;
-    border-radius: 20px; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;
-}
-.gauge-display { margin: 0 0 15px 0; color: #34c759; font-size: 24px; font-weight: 800; }
-.wheel-bay { position: relative; width: 190px; height: 190px; margin-bottom: 20px; }
-.wheel {
-    width: 190px; height: 190px; border-radius: 50%;
-    background: conic-gradient(#e74c3c 0deg 360deg); position: relative;
-}
-.wheel-center {
-    width: 164px; height: 164px; background: #0f0f17;
-    border-radius: 50%; position: absolute; top: 13px; left: 13px; z-index: 2;
-}
-.pointer {
-    width: 4px; height: 95px; background: #ffffff; position: absolute;
-    top: 0; left: 93px; transform-origin: bottom center; z-index: 3;
-}
-.pointer::before {
-    content: ''; position: absolute; top: -5px; left: -6px;
-    border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #ffffff;
+.cache-purge-btn {
+    background: #221212; border: 1px solid #3d1b1b; color: #ff6b6b;
+    padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer;
 }
 
-/* Staging Dock */
-.staging-area { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; }
-.staged-slot {
-    flex: 1; background: #11111a; border: 2px dashed #222235; border-radius: 12px;
-    padding: 12px; text-align: center; font-size: 12px; color: #52526b; font-weight: bold;
-    min-height: 52px; display: flex; flex-direction: column; justify-content: center; align-items: center;
-}
-.staged-slot.active { border-style: solid; background: #181826; color: #fff; }
-.staging-arrow { color: #3a3a55; font-weight: bold; }
-
-/* Grid shelves with minimal text */
-.deck-title { font-size: 14px; font-weight: 700; color: #6e6e77; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-.visual-shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 25px; }
-.item-card {
-    background: linear-gradient(135deg, #12121e 0%, #0c0c14 100%);
-    padding: 12px 6px; border-radius: 14px; border: 2px solid #1f1f33;
-    text-align: center; cursor: pointer; position: relative; transition: 0.15s;
-}
-.item-card .emoji { font-size: 34px; margin-bottom: 4px; display: block; }
-.item-card .price { color: #ffca28; font-size: 12px; font-weight: 700; display: block; }
-.item-card.selected { border-color: #5856d6 !important; background: #1a1a2e; transform: scale(0.96); }
-
-/* Quick Action Mini-Sells */
-.mini-sell-anchor {
-    background: #2c0e0e; color: #ff453a; border: none; font-size: 9px;
-    font-weight: bold; padding: 3px 6px; border-radius: 6px; margin-top: 6px; width: 90%; cursor: pointer;
+/* Tab Management */
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.section-divider {
+    font-size: 11px; font-weight: 800; color: #52526b; letter-spacing: 1px; margin: 20px 0 10px 0;
 }
 
-/* Functional Buttons */
-.prime-action-button {
-    border: none; padding: 16px; border-radius: 14px; width: 100%;
-    font-size: 15px; font-weight: bold; cursor: pointer; display: flex;
-    justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+/* Main Tap Interface */
+.tap-zone { text-align: center; padding: 20px 0; }
+.tap-sphere {
+    background: radial-gradient(circle, #222235 0%, #0f0f17 100%);
+    width: 130px; height: 130px; border-radius: 50%; border: 3px solid #31314d;
+    font-size: 54px; cursor: pointer; transition: transform 0.05s; outline: none;
 }
-.secure-green { background: #34c759; }
-.secure-purple { background: #5856d6; }
-.prime-action-button:active { transform: scale(0.98); opacity: 0.9; }
+.tap-sphere:active { transform: scale(0.93); }
+.tap-hint { font-size: 12px; color: #61617a; margin-top: 8px; }
 
-/* Control Sliders & Badges */
-.switch-card { display: flex; align-items: center; gap: 8px; color: #8e8e93; font-size: 13px; margin-bottom: 15px; cursor: pointer; }
-.stats-dashboard { display: flex; gap: 10px; margin-bottom: 20px; }
-.stat-badge {
-    flex: 1; background: #0f0f17; border: 1px solid #1b1b2b; border-radius: 14px;
-    padding: 12px; display: flex; flex-direction: column; align-items: center;
+/* Case Selector List Under Tap */
+.case-selection-grid { display: flex; flex-direction: column; gap: 8px; }
+.case-row-card {
+    background: #13131f; border: 1px solid #1f1f33; padding: 12px;
+    border-radius: 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;
 }
-.badge-icon { font-size: 20px; margin-bottom: 4px; }
-.badge-val { font-size: 18px; font-weight: bold; color: #fff; }
-.badge-lbl { font-size: 11px; color: #6e6e77; font-weight: 500; }
+.case-details { display: flex; flex-direction: column; gap: 2px; }
+.case-title { font-weight: 700; font-size: 14px; }
+.case-odds-preview { font-size: 11px; color: #6e6e82; }
+.case-price-tag {
+    background: #242438; border: 1px solid #3a3a59; color: #ffca28;
+    padding: 6px 12px; border-radius: 10px; font-size: 13px; font-weight: 700;
+}
 
-/* VISUAL MODAL LAYER */
-.modal-overlay {
+/* Grids and Items */
+.item-grid-shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mini-item-card {
+    background: #12121c; border: 1px solid #1f1f33; border-radius: 12px;
+    padding: 10px 4px; text-align: center; cursor: pointer; transition: 0.1s;
+}
+.mini-item-card.selected { border-color: #5856d6; background: #1b1b30; }
+.mini-item-card .mic-emoji { font-size: 28px; display: block; margin-bottom: 4px; }
+.mini-item-card .mic-val { color: #ffca28; font-size: 11px; font-weight: 700; }
+.quick-sell-btn {
+    background: #2d1414; color: #ff453a; border: none; font-size: 9px;
+    font-weight: 700; padding: 2px 4px; border-radius: 4px; margin-top: 6px; width: 90%;
+}
+
+/* Upgrader Layout Details */
+.upgrader-deck {
+    background: #0f0f18; border: 1px solid #1c1c2d; padding: 16px;
+    border-radius: 18px; display: flex; flex-direction: column; align-items: center;
+}
+.chance-readout { color: #34c759; font-size: 20px; font-weight: 800; margin-bottom: 12px; }
+.dial-container { position: relative; width: 160px; height: 160px; margin-bottom: 15px; }
+.dial-ring { width: 160px; height: 160px; border-radius: 50%; background: #e74c3c; position: relative; }
+.dial-core { width: 134px; height: 134px; background: #0f0f18; border-radius: 50%; position: absolute; top: 13px; left: 13px; z-index: 2; }
+.dial-needle { width: 4px; height: 80px; background: #fff; position: absolute; top: 0; left: 78px; transform-origin: bottom center; z-index: 3; }
+.instant-mode-toggle { font-size: 13px; color: #8e8e93; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.action-trigger {
+    border: none; padding: 14px; border-radius: 12px; width: 100%;
+    font-size: 14px; font-weight: bold; color: white; cursor: pointer;
+}
+.purple-theme { background: #5856d6; }
+
+/* Staging Area Components */
+.staging-dock { display: flex; align-items: center; gap: 8px; }
+.dock-slot {
+    flex: 1; background: #10101a; border: 2px dashed #202033; border-radius: 12px;
+    padding: 10px; text-align: center; font-size: 12px; color: #4e4e66; font-weight: bold;
+    min-height: 48px; display: flex; flex-direction: column; justify-content: center;
+}
+.dock-slot.active { border-style: solid; background: #161624; color: #fff; border-color: #3a3a55; }
+.dock-arrow { color: #2d2d44; font-weight: bold; }
+
+/* Profile View Elements */
+.dashboard-stats { display: flex; gap: 8px; }
+.stat-card {
+    flex: 1; background: #0f0f18; border: 1px solid #1c1c2d; padding: 12px;
+    border-radius: 12px; display: flex; flex-direction: column; align-items: center;
+}
+.sc-val { font-size: 18px; font-weight: bold; }
+.sc-lbl { font-size: 11px; color: #6e6e82; }
+
+/* FIXED HORIZONTAL ROLLER VIEWPORT BOX */
+.modal-backdrop {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(4,4,6,0.85); display: none; justify-content: center;
-    align-items: center; z-index: 999; backdrop-filter: blur(4px);
+    background: rgba(4, 4, 6, 0.9); display: none; justify-content: center;
+    align-items: center; z-index: 999; padding: 16px; box-sizing: border-box;
 }
-.modal-window {
-    background: #12121c; border: 2px solid #2d2d44; border-radius: 24px;
-    width: 80%; max-width: 300px; padding: 24px; text-align: center;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5); animation: modalOpen 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+.roller-window {
+    background: #11111a; border: 1px solid #222238; border-radius: 20px;
+    width: 100%; max-width: 360px; padding: 20px; box-sizing: border-box; text-align: center;
 }
-@keyframes modalOpen { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.modal-banner { font-size: 20px; font-weight: 900; letter-spacing: 1px; margin-bottom: 15px; }
-.modal-emoji { font-size: 64px; margin-bottom: 10px; }
-.modal-item-name { font-size: 16px; font-weight: bold; margin-bottom: 6px; }
-.modal-value { color: #ffca28; font-weight: bold; font-size: 14px; margin-bottom: 20px; }
-.modal-close-btn {
-    background: #fff; color: #000; border: none; padding: 12px 30px;
-    border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; width: 100%;
+.roller-title { font-size: 15px; font-weight: bold; color: #8e8e93; margin-bottom: 15px; }
+.roller-viewport {
+    position: relative; width: 100%; height: 80px; background: #07070a;
+    border-radius: 12px; border: 1px solid #222235; overflow: hidden; margin-bottom: 15px;
+}
+.roller-center-line {
+    position: absolute; left: 50%; top: 0; width: 2px; height: 100%;
+    background: #ffd700; z-index: 10; transform: translateX(-50%);
+    box-shadow: 0 0 8px #ffd700;
+}
+.roller-tape {
+    display: flex; align-items: center; position: absolute; left: 0; top: 0;
+    height: 100%; gap: 10px; padding-left: 150px; will-change: transform;
+}
+.roller-card-item {
+    min-width: 60px; max-width: 60px; height: 60px; background: #161626;
+    border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 32px;
+}
+.roller-result-card { display: none; margin-bottom: 20px; }
+.modal-claim-btn {
+    background: #ffffff; color: #000000; border: none; padding: 12px;
+    border-radius: 12px; font-weight: bold; width: 100%; display: none; cursor: pointer;
 }
 
-/* Navigation Menu Dock */
-.nav-dock {
-    position: fixed; bottom: 0; left: 0; width: 100%; background: #0f0f17;
-    border-top: 1px solid #1c1c2d; display: flex; height: 64px; box-sizing: border-box; z-index: 900;
+/* Navigation System Footer */
+.bottom-navigation-dock {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 420px; height: 68px; background: #0f0f18;
+    border-top: 1px solid #1a1a26; display: flex; box-sizing: border-box; z-index: 800;
 }
-.dock-item {
-    flex: 1; background: transparent; border: none; font-size: 22px;
-    color: #48484a; cursor: pointer; transition: 0.2s; height: 100%;
+.nav-item {
+    flex: 1; background: transparent; border: none; font-size: 13px;
+    color: #52526b; font-weight: 700; cursor: pointer; transition: 0.15s;
 }
-.dock-item.active { color: #ffffff; background: linear-gradient(0deg, #161626 0%, transparent 100%); }
+.nav-item.active { color: #ffffff; background: linear-gradient(0deg, #151525 0%, transparent 100%); }

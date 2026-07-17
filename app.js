@@ -9,32 +9,25 @@ let selectedTargetIndex = null;
 
 window.onload = () => {
     if (window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); }
-    // Clean migration engine for old users
-    inventory = inventory.filter(item => item && item.name);
-    renderUpgraderGrids();
+    renderCaseMenu();
     updateUI();
 };
 
 function clearLegacyData() {
     localStorage.clear();
-    balance = 100.0;
-    inventory = [];
-    stats = { upgradesTried: 0 };
-    bestPulls = [];
-    selectedWagerIndex = null;
-    selectedTargetIndex = null;
+    balance = 100.0; inventory = []; stats = { upgradesTried: 0 }; bestPulls = [];
+    selectedWagerIndex = null; selectedTargetIndex = null;
     saveGame();
+    renderCaseMenu();
     renderUpgraderGrids();
-    alert("Cache wiped successfully! Old inventory bugs fixed.");
 }
 
 function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.dock-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     document.getElementById('btn-' + tabId).classList.add('active');
-    
-    if(tabId === 'upgraderTab') { renderUpgraderGrids(); }
+    if (tabId === 'upgraderTab') renderUpgraderGrids();
 }
 
 function saveGame() {
@@ -45,50 +38,39 @@ function saveGame() {
     updateUI();
 }
 
-function parseEmoji(fullName) {
-    // Intelligently filter out item emojis without crashing on old strings
-    const match = fullName.match(/[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}]/u);
-    return match ? match[0] : "📦";
-}
-
 function updateUI() {
     document.getElementById('balanceDisplay').innerText = balance.toFixed(1);
     document.getElementById('statUpgrades').innerText = stats.upgradesTried;
     document.getElementById('statItemsCount').innerText = inventory.length;
-    
-    // Inventory Display Panel
+
+    // Render Inventory Tab Shelf
     const profileInv = document.getElementById('profileInventory');
     profileInv.innerHTML = '';
     inventory.forEach((item, index) => {
         let card = document.createElement('div');
-        card.className = 'item-card';
-        card.style.borderColor = item.color;
+        card.className = 'mini-item-card';
         card.innerHTML = `
-            <span class="emoji">${parseEmoji(item.name)}</span>
-            <span class="price">${item.value} U</span>
-            <button class="mini-sell-anchor" onclick="sellItem(${index}, event)">SELL (${Math.floor(item.value * 0.7)})</button>
+            <span class="mic-emoji">${item.emoji}</span>
+            <span class="mic-val">${item.value} U</span>
+            <button class="quick-sell-btn" onclick="sellItem(${index}, event)">SELL (${Math.floor(item.value * 0.7)})</button>
         `;
         profileInv.appendChild(card);
     });
 
-    // Leaderboard/Best Drops Display Panel
+    // Render Best Drops Shelf
     const leaderList = document.getElementById('leaderboardList');
     leaderList.innerHTML = '';
     [...bestPulls].sort((a,b) => b.value - a.value).slice(0, 6).forEach(item => {
         let card = document.createElement('div');
-        card.className = 'item-card';
-        card.style.borderColor = item.color;
-        card.innerHTML = `
-            <span class="emoji">${parseEmoji(item.name)}</span>
-            <span class="price">${item.value} U</span>
-        `;
+        card.className = 'mini-item-card';
+        card.innerHTML = `<span class="mic-emoji">${item.emoji}</span><span class="mic-val">${item.value} U</span>`;
         leaderList.appendChild(card);
     });
 }
 
 function clickCoin() {
     const now = Date.now();
-    if (now - lastClickTime >= 25) { 
+    if (now - lastClickTime >= 25) {
         balance += 0.1;
         lastClickTime = now;
         document.getElementById('balanceDisplay').innerText = balance.toFixed(1);
@@ -96,33 +78,77 @@ function clickCoin() {
     }
 }
 
-function buyCase() {
-    if (balance < 10) {
-        showVisualModal("DECLINED", "❌", "Insufficient Funds", "Need 10 U-Coins", "#ff3b30");
-        return;
-    }
-    balance -= 10;
-    
-    let base = baseItems[Math.floor(Math.random() * baseItems.length)];
-    let rarity = rarities[3]; // Normal default
-    
-    let rarityRoll = Math.random() * 100;
-    if (rarityRoll <= 1.0) rarity = rarities[0];       // Diamond (1%)
-    else if (rarityRoll <= 5.0) rarity = rarities[1];  // Gold (4%)
-    else if (rarityRoll <= 25.0) rarity = rarities[2]; // Silver (20%)
+/* Render the clean Case Selection Menu below the Tap button */
+function renderCaseMenu() {
+    const menu = document.getElementById('caseMenuGrid');
+    menu.innerHTML = '';
+    casesData.forEach((box, index) => {
+        let row = document.createElement('div');
+        row.className = 'case-row-card';
+        row.onclick = () => openCaseWithRoller(index);
+        row.innerHTML = `
+            <div class="case-details">
+                <span class="case-title">📦 ${box.name}</span>
+                <span class="case-odds-preview">${box.oddsText}</span>
+            </div>
+            <span class="case-price-tag">${box.cost} U</span>
+        `;
+        menu.appendChild(row);
+    });
+}
 
-    let shinyRoll = Math.floor(Math.random() * 1000) + 1;
-    let isShiny = (shinyRoll === 777); // 1:1000
+/* Ultra Smooth Horizontal Tape Roller Unboxing Animation Engine */
+function openCaseWithRoller(caseIndex) {
+    const targetCase = casesData[caseIndex];
+    if (balance < targetCase.cost) return alert("Insufficient U-Coins!");
     
-    let finalValue = base.baseValue * rarity.multiplier * (isShiny ? shiny.multiplier : 1);
-    let fullName = (isShiny ? "✨ Shiny " : "") + rarity.name + " " + base.name;
+    balance -= targetCase.cost;
+    const itemWon = targetCase.rollLogic();
     
-    let newItem = { name: fullName, value: finalValue, color: isShiny ? shiny.color : rarity.color };
-    inventory.push(newItem);
-    bestPulls.push(newItem);
-    
-    saveGame();
-    showVisualModal("UNBOXED", parseEmoji(base.name), fullName, `${finalValue} U-Coins`, newItem.color);
+    // UI Elements Reset
+    document.getElementById('rollerCaseTitle').innerText = `Opening ${targetCase.name}`;
+    document.getElementById('rollerResultCard').style.display = 'none';
+    document.getElementById('modalClaimBtn').style.display = 'none';
+    const tape = document.getElementById('rollerTape');
+    tape.style.transition = 'none';
+    tape.style.transform = 'translateX(0px)';
+    tape.innerHTML = '';
+
+    // Generate 35 dummy boxes to populate visual sliding path stream
+    for(let i=0; i<35; i++) {
+        let card = document.createElement('div');
+        card.className = 'roller-card-item';
+        // Place item won at index position 28 exactly
+        let randomMockItem = (i === 28) ? itemWon : itemPool[Math.floor(Math.random() * itemPool.length)];
+        card.innerText = randomMockItem.emoji;
+        tape.appendChild(card);
+    }
+
+    document.getElementById('unboxingModal').style.display = 'flex';
+
+    // Drive calculation dynamics
+    setTimeout(() => {
+        tape.style.transition = 'transform 3.5s cubic-bezier(0.1, 0.8, 0.1, 1)';
+        // 28 items * 70px cell pacing metric (60px card dimension + 10px spacing buffer layout block)
+        tape.style.transform = 'translateX(-1960px)';
+    }, 50);
+
+    // Stop execution wrap state reveal
+    setTimeout(() => {
+        inventory.push(itemWon);
+        bestPulls.push(itemWon);
+        saveGame();
+
+        document.getElementById('resultEmoji').innerText = itemWon.emoji;
+        document.getElementById('resultName').innerText = "Acquired Item";
+        document.getElementById('resultValue').innerText = `${itemWon.value} U-Coins`;
+        document.getElementById('rollerResultCard').style.display = 'block';
+        document.getElementById('modalClaimBtn').style.display = 'block';
+    }, 3600);
+}
+
+function closeUnboxModal() {
+    document.getElementById('unboxingModal').style.display = 'none';
 }
 
 function sellItem(index, event) {
@@ -131,25 +157,20 @@ function sellItem(index, event) {
     inventory.splice(index, 1);
     if(selectedWagerIndex === index) selectedWagerIndex = null;
     saveGame();
-    renderUpgraderGrids();
+    if(document.getElementById('upgraderTab').classList.contains('active')) renderUpgraderGrids();
 }
 
 function renderUpgraderGrids() {
     const wagerGrid = document.getElementById('wagerGrid');
     wagerGrid.innerHTML = '';
-    
     inventory.forEach((item, index) => {
         let card = document.createElement('div');
-        card.className = `item-card ${selectedWagerIndex === index ? 'selected' : ''}`;
-        card.style.borderColor = item.color;
-        card.innerHTML = `
-            <span class="emoji">${parseEmoji(item.name)}</span>
-            <span class="price">${item.value} U</span>
-        `;
+        card.className = `mini-item-card ${selectedWagerIndex === index ? 'selected' : ''}`;
+        card.innerHTML = `<span class="mic-emoji">${item.emoji}</span><span class="mic-val">${item.value} U</span>`;
         card.onclick = () => {
             selectedWagerIndex = index;
-            document.getElementById('stageWager').className = "staged-slot active";
-            document.getElementById('stageWager').innerHTML = `<span style="font-size:20px">${parseEmoji(item.name)}</span><span>${item.value} U</span>`;
+            document.getElementById('stageWager').className = "dock-slot active";
+            document.getElementById('stageWager').innerHTML = `<span style="font-size:20px">${item.emoji}</span><span>${item.value} U</span>`;
             renderUpgraderGrids();
             updateChance();
         };
@@ -160,16 +181,12 @@ function renderUpgraderGrids() {
     targetGrid.innerHTML = '';
     targetShopSkins.forEach((item, index) => {
         let card = document.createElement('div');
-        card.className = `item-card ${selectedTargetIndex === index ? 'selected' : ''}`;
-        card.style.borderColor = item.color;
-        card.innerHTML = `
-            <span class="emoji">${parseEmoji(item.name)}</span>
-            <span class="price">${item.value} U</span>
-        `;
+        card.className = `mini-item-card ${selectedTargetIndex === index ? 'selected' : ''}`;
+        card.innerHTML = `<span class="mic-emoji">${item.emoji}</span><span class="mic-val">${item.value} U</span>`;
         card.onclick = () => {
             selectedTargetIndex = index;
-            document.getElementById('stageTarget').className = "staged-slot active";
-            document.getElementById('stageTarget').innerHTML = `<span style="font-size:20px">${parseEmoji(item.name)}</span><span>${item.value} U</span>`;
+            document.getElementById('stageTarget').className = "dock-slot active";
+            document.getElementById('stageTarget').innerHTML = `<span style="font-size:20px">${item.emoji}</span><span>${item.value} U</span>`;
             renderUpgraderGrids();
             updateChance();
         };
@@ -180,105 +197,60 @@ function renderUpgraderGrids() {
 function updateChance() {
     if (selectedWagerIndex === null || selectedTargetIndex === null) {
         document.getElementById('chanceDisplay').innerText = "0.00%";
-        document.getElementById('upgraderWheel').style.background = `conic-gradient(#e74c3c 0deg 360deg)`;
+        document.getElementById('upgraderWheel').style.background = `#e74c3c`;
         return;
     }
-    
     let chance = (inventory[selectedWagerIndex].value / targetShopSkins[selectedTargetIndex].value) * 100;
     if (chance > 100) chance = 100;
-    
     document.getElementById('chanceDisplay').innerText = chance.toFixed(2) + "%";
     
     let halfSlice = (chance * 3.6) / 2;
     let startGreen = 180 - halfSlice;
     let endGreen = 180 + halfSlice;
-    
-    document.getElementById('upgraderWheel').style.background = `
-        conic-gradient(#e74c3c 0deg ${startGreen}deg, #34c759 ${startGreen}deg ${endGreen}deg, #e74c3c ${endGreen}deg 360deg)
-    `;
-    
-    const pointer = document.getElementById('wheelPointer');
-    pointer.style.transition = 'none';
-    pointer.style.transform = 'rotate(0deg)';
+    document.getElementById('upgraderWheel').style.background = `conic-gradient(#e74c3c 0deg ${startGreen}deg, #34c759 ${startGreen}deg ${endGreen}deg, #e74c3c ${endGreen}deg 360deg)`;
 }
 
 function attemptUpgrade() {
-    if (selectedWagerIndex === null || selectedTargetIndex === null) return;
-    
-    let wagerItem = inventory[selectedWagerIndex];
-    let targetItem = targetShopSkins[selectedTargetIndex];
-    
-    let chance = (wagerItem.value / targetItem.value) * 100;
+    if (selectedWagerIndex === null || selectedTargetIndex === null) return alert("Select staged items!");
+    let chance = (inventory[selectedWagerIndex].value / targetShopSkins[selectedTargetIndex].value) * 100;
     if (chance > 100) chance = 100;
     
-    const isFast = document.getElementById('fastUpgrade').checked;
     stats.upgradesTried += 1;
-    
+    const isFast = document.getElementById('fastUpgrade').checked;
     const btn = document.getElementById('upgradeBtn');
     const pointer = document.getElementById('wheelPointer');
     
-    pointer.style.transition = 'none';
-    pointer.style.transform = 'rotate(0deg)';
-    pointer.offsetHeight;
+    pointer.style.transition = 'none'; pointer.style.transform = 'rotate(0deg)'; pointer.offsetHeight;
     
     let roll = Math.random() * 100;
-    let halfSlice = (chance * 3.6) / 2;
-    let targetDegree = 0;
     let isWin = roll <= chance;
-    
-    if (isWin) {
-        targetDegree = (180 - halfSlice) + (Math.random() * (halfSlice * 2));
-    } else {
-        let leftRed = 180 - halfSlice;
-        let rightRed = 360 - (180 + halfSlice);
-        targetDegree = Math.random() > 0.5 ? (Math.random() * leftRed) : ((180 + halfSlice) + (Math.random() * rightRed));
-    }
-    
+    let halfSlice = (chance * 3.6) / 2;
+    let targetDegree = isWin ? ((180 - halfSlice) + (Math.random() * (halfSlice * 2))) : (Math.random() > 0.5 ? (Math.random() * (180 - halfSlice)) : ((180 + halfSlice) + (Math.random() * (180 - halfSlice))));
     let totalSpins = 2160 + targetDegree;
-    
+
     function resolveUpgrade() {
+        let wagerItem = inventory[selectedWagerIndex];
+        let targetItem = targetShopSkins[selectedTargetIndex];
         inventory.splice(selectedWagerIndex, 1);
         
         if (isWin) {
-            inventory.push(targetItem);
-            bestPulls.push(targetItem);
-            showVisualModal("UPGRADED", parseEmoji(targetItem.name), targetItem.name, `${targetItem.value} U-Coins`, '#34c759');
+            inventory.push(targetItem); bestPulls.push(targetItem);
+            alert(`🎉 upgraded successfully to ${targetItem.emoji}!`);
         } else {
-            showVisualModal("CRASHED", "💥", "Upgrade Failed", "Staged item destroyed", '#ff3b30');
+            alert("💥 Upgrade crashed!");
         }
-        
         selectedWagerIndex = null;
-        document.getElementById('stageWager').className = "staged-slot empty";
+        document.getElementById('stageWager').className = "dock-slot empty";
         document.getElementById('stageWager').innerText = "Select Wager";
-        btn.innerText = "🚀 COMMENCE UPGRADE";
-        btn.disabled = false;
-        saveGame();
-        renderUpgraderGrids();
-        updateChance();
+        btn.innerText = "START UPGRADE"; btn.disabled = false;
+        saveGame(); renderUpgraderGrids(); updateChance();
     }
-    
-    if (isFast) {
-        resolveUpgrade();
-    } else {
-        btn.innerText = "COMPUTING MATRIX...";
-        btn.disabled = true;
+
+    if (isFast) resolveUpgrade();
+    else {
+        btn.innerText = "COMPUTING..."; btn.disabled = true;
         pointer.style.transition = 'transform 4s cubic-bezier(0.1, 0.8, 0.1, 1)';
         pointer.style.transform = `rotate(${totalSpins}deg)`;
         setTimeout(resolveUpgrade, 4100);
     }
-}
-
-/* Modal UI Control Core */
-function showVisualModal(header, emoji, title, sub, themeColor) {
-    const banner = document.getElementById('modalBanner');
-    banner.innerText = header;
-    banner.style.color = themeColor;
-    document.getElementById('modalEmoji').innerText = emoji;
-    document.getElementById('modalItemName').innerText = title;
-    document.getElementById('modalValue').innerText = sub;
-    document.getElementById('resultModal').style.display = 'flex';
-}
-
-function closeModal() {
-    document.getElementById('resultModal').style.display = 'none';
 }

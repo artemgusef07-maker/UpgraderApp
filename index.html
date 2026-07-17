@@ -2,105 +2,113 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber-Emoji Upgrader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Upgrader</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <!-- Top Dashboard Header -->
-    <div class="header">
-        <div class="balance-pill">🪙 <span id="balanceDisplay">100.0</span></div>
-        <button class="reset-pill" onclick="clearLegacyData()" title="Fix Cache Bugs">🔄 Reset Cache</button>
-    </div>
-
-    <!-- MAIN APP CARDS CONTAINER -->
-    <div id="clickerTab" class="tab-content active">
-        <div class="visual-hub">
-            <button class="main-tap-sphere" onclick="clickCoin()">👾</button>
-            <div class="tap-subtext">⚡ +0.1 U-Coin per tap</div>
-            <button class="prime-action-button secure-green" onclick="buyCase()">
-                <span class="btn-icon">📦</span>
-                <span class="btn-text">Open Emoji Capsule</span>
-                <span class="btn-cost">10 U</span>
-            </button>
+    <div class="phone-wrapper">
+        <!-- Top Sticky Header -->
+        <div class="app-header">
+            <div class="u-coin-balance">
+                <span class="coin-logo">U</span>
+                <span id="balanceDisplay">100.0</span>
+            </div>
+            <button class="cache-purge-btn" onclick="clearLegacyData()">🔄 Reset</button>
         </div>
-    </div>
 
-    <div id="upgraderTab" class="tab-content">
-        <div class="engine-deck">
-            <h2 class="gauge-display"><span id="chanceDisplay">0.00%</span> Chance</h2>
-            
-            <div class="wheel-bay">
-                <div id="upgraderWheel" class="wheel">
-                    <div id="wheelPointer" class="pointer"></div>
-                    <div class="wheel-center"></div>
+        <!-- TAB 1: TAP & CASES -->
+        <div id="clickerTab" class="tab-pane active">
+            <div class="tap-zone">
+                <button class="tap-sphere" onclick="clickCoin()">👾</button>
+                <div class="tap-hint">⚡ +0.1 per tap</div>
+            </div>
+
+            <div class="section-divider">🛒 SELECT CASE</div>
+            <div id="caseMenuGrid" class="case-selection-grid"></div>
+        </div>
+
+        <!-- TAB 2: UPGRADER -->
+        <div id="upgraderTab" class="tab-pane">
+            <div class="upgrader-deck">
+                <div class="chance-readout"><span id="chanceDisplay">0.00%</span> Win Chance</div>
+                
+                <div class="dial-container">
+                    <div id="upgraderWheel" class="dial-ring">
+                        <div id="wheelPointer" class="dial-needle"></div>
+                        <div class="dial-core"></div>
+                    </div>
+                </div>
+
+                <label class="instant-mode-toggle">
+                    <input type="checkbox" id="fastUpgrade">
+                    <span>⚡ Instant (Skip Spin)</span>
+                </label>
+
+                <button class="action-trigger purple-theme" onclick="attemptUpgrade()" id="upgradeBtn">START UPGRADE</button>
+            </div>
+
+            <div class="section-divider">🎯 STAGING DOCK</div>
+            <div class="staging-dock">
+                <div id="stageWager" class="dock-slot empty">Select Wager</div>
+                <div class="dock-arrow">➔</div>
+                <div id="stageTarget" class="dock-slot empty">Select Target</div>
+            </div>
+
+            <div class="section-divider">🎒 YOUR SHELF</div>
+            <div id="wagerGrid" class="item-grid-shelf"></div>
+
+            <div class="section-divider">🏬 TARGET SHOWROOM</div>
+            <div id="targetGrid" class="item-grid-shelf"></div>
+        </div>
+
+        <!-- TAB 3: INVENTORY & PROFILE -->
+        <div id="profileTab" class="tab-pane">
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <span class="sc-val" id="statUpgrades">0</span>
+                    <span class="sc-lbl">Upgrades</span>
+                </div>
+                <div class="stat-card">
+                    <span class="sc-val" id="statItemsCount">0</span>
+                    <span class="sc-lbl">Items</span>
                 </div>
             </div>
-
-            <div class="control-row">
-                <label class="switch-card">
-                    <input type="checkbox" id="fastUpgrade">
-                    <span class="switch-label">⚡ Fast Mode (Skip Spin)</span>
-                </label>
-            </div>
-
-            <button class="prime-action-button secure-purple" onclick="attemptUpgrade()" id="upgradeBtn">
-                🚀 COMMENCE UPGRADE
-            </button>
+            
+            <div class="section-divider">🎒 FULL INVENTORY</div>
+            <div id="profileInventory" class="item-grid-shelf"></div>
+            
+            <div class="section-divider">🏆 ALL-TIME BEST</div>
+            <div id="leaderboardList" class="item-grid-shelf"></div>
         </div>
 
-        <div class="deck-title">🎯 Selected Staging</div>
-        <div class="staging-area">
-            <div id="stageWager" class="staged-slot empty">Select Wager</div>
-            <div class="staging-arrow">➔</div>
-            <div id="stageTarget" class="staged-slot empty">Select Target</div>
-        </div>
+        <!-- SMOOTH HORIZONTAL ROLLER MODAL (No overlapping text) -->
+        <div id="unboxingModal" class="modal-backdrop">
+            <div class="roller-window">
+                <div class="roller-title" id="rollerCaseTitle">Opening Case...</div>
+                
+                <div class="roller-viewport">
+                    <div class="roller-center-line"></div>
+                    <div id="rollerTape" class="roller-tape"></div>
+                </div>
 
-        <div class="deck-title">🎒 Your Inventory</div>
-        <div id="wagerGrid" class="visual-shelf"></div>
+                <div id="rollerResultCard" class="roller-result-card">
+                    <div id="resultEmoji" style="font-size: 48px;">👾</div>
+                    <div id="resultName" style="font-weight: bold; margin: 5px 0;">Item Name</div>
+                    <div id="resultValue" style="color: #ffca28; font-size: 14px;">0 U</div>
+                </div>
 
-        <div class="deck-title">🏬 Showroom Targets</div>
-        <div id="targetGrid" class="visual-shelf"></div>
-    </div>
-
-    <div id="profileTab" class="tab-content">
-        <div class="stats-dashboard">
-            <div class="stat-badge">
-                <span class="badge-icon">🔄</span>
-                <span class="badge-val" id="statUpgrades">0</span>
-                <span class="badge-lbl">Upgrades</span>
-            </div>
-            <div class="stat-badge">
-                <span class="badge-icon">🎒</span>
-                <span class="badge-val" id="statItemsCount">0</span>
-                <span class="badge-lbl">Items Held</span>
+                <button class="modal-claim-btn" id="modalClaimBtn" onclick="closeUnboxModal()">COLLECT</button>
             </div>
         </div>
-        
-        <div class="deck-title">💎 Your Full Collection</div>
-        <div id="profileInventory" class="visual-shelf"></div>
-        
-        <div class="deck-title">🏆 All-Time Best Pulls</div>
-        <div id="leaderboardList" class="visual-shelf"></div>
-    </div>
 
-    <!-- CUSTOM VISUAL POPUP MODAL (Replaces boring alerts) -->
-    <div id="resultModal" class="modal-overlay">
-        <div class="modal-window">
-            <div id="modalBanner" class="modal-banner">SUCCESS</div>
-            <div id="modalEmoji" class="modal-emoji">👾</div>
-            <div id="modalItemName" class="modal-item-name">Diamond Core</div>
-            <div id="modalValue" class="modal-value">250 U</div>
-            <button class="modal-close-btn" onclick="closeModal()">COLLECT</button>
+        <!-- Bottom Navigation Bar -->
+        <div class="bottom-navigation-dock">
+            <button onclick="switchTab('clickerTab')" id="btn-clickerTab" class="nav-item active">⚡ Tap</button>
+            <button onclick="switchTab('upgraderTab')" id="btn-upgraderTab" class="nav-item">🔄 Upgrade</button>
+            <button onclick="switchTab('profileTab')" id="btn-profileTab" class="nav-item">👤 Profile</button>
         </div>
-    </div>
-
-    <!-- Bottom Fixed Navigation Dock -->
-    <div class="nav-dock">
-        <button onclick="switchTab('clickerTab')" id="btn-clickerTab" class="dock-item active">⚡</button>
-        <button onclick="switchTab('upgraderTab')" id="btn-upgraderTab" class="dock-item">🔄</button>
-        <button onclick="switchTab('profileTab')" id="btn-profileTab" class="dock-item">👤</button>
     </div>
 
     <script src="items.js"></script>
