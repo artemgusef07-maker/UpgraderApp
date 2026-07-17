@@ -1,71 +1,135 @@
 body {
-    background-color: #0b0b0e;
-    color: #f1f1f4;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #08080c;
+    color: #e4e4ed;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
     margin: 0;
-    padding: 15px;
-    padding-bottom: 50px;
+    padding: 16px;
+    padding-bottom: 90px;
+    user-select: none;
 }
-.header { display: flex; justify-content: center; margin-bottom: 20px; }
+/* Header Elements */
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .balance-pill {
-    background: #161622; border: 1px solid #2d2d3f; padding: 10px 20px;
-    border-radius: 30px; font-weight: bold; font-size: 18px; color: #ffd700;
+    background: #11111c; border: 1px solid #1f1f35; padding: 8px 16px;
+    border-radius: 20px; font-weight: bold; font-size: 18px; color: #ffca28;
 }
-.nav { display: flex; gap: 8px; margin-bottom: 20px; background: #161622; padding: 5px; border-radius: 12px; }
-.nav button {
-    flex: 1; padding: 12px; background: transparent; color: #8e8e93;
-    border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;
+.reset-pill {
+    background: #211313; border: 1px solid #421c1c; color: #ff6b6b;
+    padding: 6px 12px; border-radius: 14px; font-size: 11px; font-weight: bold; cursor: pointer;
 }
-.nav button.active { background: #242438; color: #ffffff; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.card { background: #12121c; padding: 20px; border-radius: 16px; border: 1px solid #1f1f30; margin-bottom: 20px; }
-.clicker-container { text-align: center; }
-.clicker-btn {
-    background: linear-gradient(145deg, #242438, #161622); width: 140px; height: 140px; border-radius: 50%;
-    font-size: 60px; border: 4px solid #3a3a55; margin: 20px auto; display: block; cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.4); transition: transform 0.05s;
+
+/* Centralized Visual Hubs */
+.visual-hub { display: flex; flex-direction: column; align-items: center; padding: 40px 0; }
+.main-tap-sphere {
+    background: radial-gradient(circle, #1c1c2e 0%, #0f0f17 100%);
+    width: 170px; height: 170px; border-radius: 50%; border: 4px solid #2d2d44;
+    font-size: 70px; cursor: pointer; box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+    transition: transform 0.05s, border-color 0.2s;
 }
-.clicker-btn:active { transform: scale(0.92); }
-.btn {
-    color: white; border: none; padding: 14px; border-radius: 10px;
-    width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
+.main-tap-sphere:active { transform: scale(0.94); border-color: #5856d6; }
+.tap-subtext { color: #6e6e77; font-size: 13px; margin-top: 12px; font-weight: 500; }
+
+/* Engine Deck & Upgrader Area */
+.engine-deck {
+    background: #0f0f17; border: 1px solid #1b1b2b; padding: 20px;
+    border-radius: 20px; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;
 }
-.purchase-btn { background: #34c759; }
-.purchase-btn:hover { background: #2ebd4f; }
-.action-btn { background: #5856d6; font-size: 18px; letter-spacing: 0.5px; }
-.wheel-card { display: flex; flex-direction: column; align-items: center; }
-.chance-header { margin: 0 0 15px 0; color: #34c759; }
-.wheel-container { position: relative; width: 200px; height: 200px; margin-bottom: 15px; }
+.gauge-display { margin: 0 0 15px 0; color: #34c759; font-size: 24px; font-weight: 800; }
+.wheel-bay { position: relative; width: 190px; height: 190px; margin-bottom: 20px; }
 .wheel {
-    width: 200px; height: 200px; border-radius: 50%;
-    background: conic-gradient(#e74c3c 0deg, #e74c3c 360deg);
-    position: relative; transition: background 0.3s ease;
+    width: 190px; height: 190px; border-radius: 50%;
+    background: conic-gradient(#e74c3c 0deg 360deg); position: relative;
 }
 .wheel-center {
-    width: 170px; height: 170px; background: #12121c;
-    border-radius: 50%; position: absolute; top: 15px; left: 15px; z-index: 2;
+    width: 164px; height: 164px; background: #0f0f17;
+    border-radius: 50%; position: absolute; top: 13px; left: 13px; z-index: 2;
 }
 .pointer {
-    width: 4px; height: 100px; background: #ffffff; position: absolute;
-    top: 0; left: 98px; transform-origin: bottom center; z-index: 3;
-    transform: rotate(0deg);
+    width: 4px; height: 95px; background: #ffffff; position: absolute;
+    top: 0; left: 93px; transform-origin: bottom center; z-index: 3;
 }
 .pointer::before {
-    content: ''; position: absolute; top: -6px; left: -6px;
+    content: ''; position: absolute; top: -5px; left: -6px;
     border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #ffffff;
 }
-.toggle-container { margin-bottom: 15px; font-size: 14px; color: #aeaeb2; }
-.selection-grid, .inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+
+/* Staging Dock */
+.staging-area { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; }
+.staged-slot {
+    flex: 1; background: #11111a; border: 2px dashed #222235; border-radius: 12px;
+    padding: 12px; text-align: center; font-size: 12px; color: #52526b; font-weight: bold;
+    min-height: 52px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+.staged-slot.active { border-style: solid; background: #181826; color: #fff; }
+.staging-arrow { color: #3a3a55; font-weight: bold; }
+
+/* Grid shelves with minimal text */
+.deck-title { font-size: 14px; font-weight: 700; color: #6e6e77; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.visual-shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 25px; }
 .item-card {
-    background: #161622; padding: 15px; border-radius: 12px; border: 2px solid #2d2d3f;
-    text-align: center; cursor: pointer; position: relative; transition: 0.2s;
+    background: linear-gradient(135deg, #12121e 0%, #0c0c14 100%);
+    padding: 12px 6px; border-radius: 14px; border: 2px solid #1f1f33;
+    text-align: center; cursor: pointer; position: relative; transition: 0.15s;
 }
-.item-card .emoji { font-size: 32px; margin-bottom: 8px; display: block; }
-.item-card .name { font-weight: bold; font-size: 14px; display: block; margin-bottom: 4px; }
-.item-card .price { color: #ffd700; font-size: 13px; font-weight: 600; }
-.item-card.selected { border-color: #5856d6; background: #1f1f35; box-shadow: 0 0 12px rgba(88, 86, 214, 0.4); }
-.sell-btn {
-    background: #ff3b30; color: white; border: none; padding: 5px 10px;
-    border-radius: 6px; font-size: 11px; font-weight: bold; margin-top: 8px; cursor: pointer; width: 100%;
+.item-card .emoji { font-size: 34px; margin-bottom: 4px; display: block; }
+.item-card .price { color: #ffca28; font-size: 12px; font-weight: 700; display: block; }
+.item-card.selected { border-color: #5856d6 !important; background: #1a1a2e; transform: scale(0.96); }
+
+/* Quick Action Mini-Sells */
+.mini-sell-anchor {
+    background: #2c0e0e; color: #ff453a; border: none; font-size: 9px;
+    font-weight: bold; padding: 3px 6px; border-radius: 6px; margin-top: 6px; width: 90%; cursor: pointer;
 }
+
+/* Functional Buttons */
+.prime-action-button {
+    border: none; padding: 16px; border-radius: 14px; width: 100%;
+    font-size: 15px; font-weight: bold; cursor: pointer; display: flex;
+    justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.secure-green { background: #34c759; }
+.secure-purple { background: #5856d6; }
+.prime-action-button:active { transform: scale(0.98); opacity: 0.9; }
+
+/* Control Sliders & Badges */
+.switch-card { display: flex; align-items: center; gap: 8px; color: #8e8e93; font-size: 13px; margin-bottom: 15px; cursor: pointer; }
+.stats-dashboard { display: flex; gap: 10px; margin-bottom: 20px; }
+.stat-badge {
+    flex: 1; background: #0f0f17; border: 1px solid #1b1b2b; border-radius: 14px;
+    padding: 12px; display: flex; flex-direction: column; align-items: center;
+}
+.badge-icon { font-size: 20px; margin-bottom: 4px; }
+.badge-val { font-size: 18px; font-weight: bold; color: #fff; }
+.badge-lbl { font-size: 11px; color: #6e6e77; font-weight: 500; }
+
+/* VISUAL MODAL LAYER */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(4,4,6,0.85); display: none; justify-content: center;
+    align-items: center; z-index: 999; backdrop-filter: blur(4px);
+}
+.modal-window {
+    background: #12121c; border: 2px solid #2d2d44; border-radius: 24px;
+    width: 80%; max-width: 300px; padding: 24px; text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5); animation: modalOpen 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes modalOpen { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-banner { font-size: 20px; font-weight: 900; letter-spacing: 1px; margin-bottom: 15px; }
+.modal-emoji { font-size: 64px; margin-bottom: 10px; }
+.modal-item-name { font-size: 16px; font-weight: bold; margin-bottom: 6px; }
+.modal-value { color: #ffca28; font-weight: bold; font-size: 14px; margin-bottom: 20px; }
+.modal-close-btn {
+    background: #fff; color: #000; border: none; padding: 12px 30px;
+    border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; width: 100%;
+}
+
+/* Navigation Menu Dock */
+.nav-dock {
+    position: fixed; bottom: 0; left: 0; width: 100%; background: #0f0f17;
+    border-top: 1px solid #1c1c2d; display: flex; height: 64px; box-sizing: border-box; z-index: 900;
+}
+.dock-item {
+    flex: 1; background: transparent; border: none; font-size: 22px;
+    color: #48484a; cursor: pointer; transition: 0.2s; height: 100%;
+}
+.dock-item.active { color: #ffffff; background: linear-gradient(0deg, #161626 0%, transparent 100%); }

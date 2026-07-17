@@ -8,61 +8,99 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+    <!-- Top Dashboard Header -->
     <div class="header">
-        <div class="balance-pill">💰 <span id="balanceDisplay">100.0</span> U-Coins</div>
+        <div class="balance-pill">🪙 <span id="balanceDisplay">100.0</span></div>
+        <button class="reset-pill" onclick="clearLegacyData()" title="Fix Cache Bugs">🔄 Reset Cache</button>
     </div>
 
-    <div class="nav">
-        <button onclick="switchTab('clickerTab')" id="btn-clickerTab" class="active">⚡ Tap</button>
-        <button onclick="switchTab('upgraderTab')" id="btn-upgraderTab">🔄 Upgrade</button>
-        <button onclick="switchTab('profileTab')" id="btn-profileTab">👤 Inventory</button>
-    </div>
-
-    <!-- CLICKER TAB -->
+    <!-- MAIN APP CARDS CONTAINER -->
     <div id="clickerTab" class="tab-content active">
-        <div class="card clicker-container">
-            <button class="clicker-btn" onclick="clickCoin()">👾</button>
-            <p style="color: #888; font-size: 14px;">+0.1 U-Coin per tap</p>
-            <button class="btn purchase-btn" onclick="buyCase()">📦 Open Emoji Capsule (10 U-Coins)</button>
+        <div class="visual-hub">
+            <button class="main-tap-sphere" onclick="clickCoin()">👾</button>
+            <div class="tap-subtext">⚡ +0.1 U-Coin per tap</div>
+            <button class="prime-action-button secure-green" onclick="buyCase()">
+                <span class="btn-icon">📦</span>
+                <span class="btn-text">Open Emoji Capsule</span>
+                <span class="btn-cost">10 U</span>
+            </button>
         </div>
     </div>
 
-    <!-- UPGRADER TAB -->
     <div id="upgraderTab" class="tab-content">
-        <!-- Visual Wheel -->
-        <div class="card wheel-card">
-            <h2 class="chance-header">Win Chance: <span id="chanceDisplay">0.00%</span></h2>
-            <div class="wheel-container">
+        <div class="engine-deck">
+            <h2 class="gauge-display"><span id="chanceDisplay">0.00%</span> Chance</h2>
+            
+            <div class="wheel-bay">
                 <div id="upgraderWheel" class="wheel">
                     <div id="wheelPointer" class="pointer"></div>
                     <div class="wheel-center"></div>
                 </div>
             </div>
-            <div class="toggle-container">
-                <input type="checkbox" id="fastUpgrade"> 
-                <label for="fastUpgrade">⚡ Instant Result (Skip Animation)</label>
+
+            <div class="control-row">
+                <label class="switch-card">
+                    <input type="checkbox" id="fastUpgrade">
+                    <span class="switch-label">⚡ Fast Mode (Skip Spin)</span>
+                </label>
             </div>
-            <button class="btn action-btn" onclick="attemptUpgrade()" id="upgradeBtn">START UPGRADE</button>
+
+            <button class="prime-action-button secure-purple" onclick="attemptUpgrade()" id="upgradeBtn">
+                🚀 COMMENCE UPGRADE
+            </button>
         </div>
 
-        <h3>1. Select Your Wager Item:</h3>
-        <div id="wagerGrid" class="selection-grid"></div>
+        <div class="deck-title">🎯 Selected Staging</div>
+        <div class="staging-area">
+            <div id="stageWager" class="staged-slot empty">Select Wager</div>
+            <div class="staging-arrow">➔</div>
+            <div id="stageTarget" class="staged-slot empty">Select Target</div>
+        </div>
 
-        <h3>2. Select Your Target Prize:</h3>
-        <div id="targetGrid" class="selection-grid"></div>
+        <div class="deck-title">🎒 Your Inventory</div>
+        <div id="wagerGrid" class="visual-shelf"></div>
+
+        <div class="deck-title">🏬 Showroom Targets</div>
+        <div id="targetGrid" class="visual-shelf"></div>
     </div>
 
-    <!-- PROFILE TAB -->
     <div id="profileTab" class="tab-content">
-        <div class="card stats-card">
-            <div>📊 Upgrades: <strong id="statUpgrades">0</strong></div>
+        <div class="stats-dashboard">
+            <div class="stat-badge">
+                <span class="badge-icon">🔄</span>
+                <span class="badge-val" id="statUpgrades">0</span>
+                <span class="badge-lbl">Upgrades</span>
+            </div>
+            <div class="stat-badge">
+                <span class="badge-icon">🎒</span>
+                <span class="badge-val" id="statItemsCount">0</span>
+                <span class="badge-lbl">Items Held</span>
+            </div>
         </div>
         
-        <h3>Your Collection</h3>
-        <div id="profileInventory" class="inventory-grid"></div>
+        <div class="deck-title">💎 Your Full Collection</div>
+        <div id="profileInventory" class="visual-shelf"></div>
         
-        <h3>🏆 Personal Best Pulls</h3>
-        <div id="leaderboardList" class="inventory-grid"></div>
+        <div class="deck-title">🏆 All-Time Best Pulls</div>
+        <div id="leaderboardList" class="visual-shelf"></div>
+    </div>
+
+    <!-- CUSTOM VISUAL POPUP MODAL (Replaces boring alerts) -->
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-window">
+            <div id="modalBanner" class="modal-banner">SUCCESS</div>
+            <div id="modalEmoji" class="modal-emoji">👾</div>
+            <div id="modalItemName" class="modal-item-name">Diamond Core</div>
+            <div id="modalValue" class="modal-value">250 U</div>
+            <button class="modal-close-btn" onclick="closeModal()">COLLECT</button>
+        </div>
+    </div>
+
+    <!-- Bottom Fixed Navigation Dock -->
+    <div class="nav-dock">
+        <button onclick="switchTab('clickerTab')" id="btn-clickerTab" class="dock-item active">⚡</button>
+        <button onclick="switchTab('upgraderTab')" id="btn-upgraderTab" class="dock-item">🔄</button>
+        <button onclick="switchTab('profileTab')" id="btn-profileTab" class="dock-item">👤</button>
     </div>
 
     <script src="items.js"></script>
