@@ -22,7 +22,6 @@ window.onload = () => {
         window.Telegram.WebApp.ready(); 
     }
     
-    // Auto-discover historical items sitting inside inventory
     inventory.forEach(item => {
         if (!unlockedItems.includes(item.emoji)) unlockedItems.push(item.emoji);
     });
@@ -464,14 +463,14 @@ function attemptUpgrade() {
         document.getElementById('stageWager').innerText = "Select Wager";
         document.getElementById('stageTarget').className = "dock-slot empty";
         document.getElementById('stageTarget').innerText = "Select Target";
-        btn.innerText = "START CALCULATED UPGRADE"; btn.disabled = false;
+        btn.innerText = "⚡ ROLL UPGRADE"; btn.disabled = false;
         isRolling = false;
         saveGame(); renderUpgraderGrids(); updateChance();
     }
 
     if (isFast) resolveUpgrade();
     else {
-        btn.innerText = "CALCULATING VEIL..."; btn.disabled = true;
+        btn.innerText = "CALCULATING..."; btn.disabled = true;
         pointer.style.transition = 'transform 2.2s cubic-bezier(0.1, 0.8, 0.1, 1)';
         pointer.style.transform = `rotate(${totalSpins}deg)`;
         setTimeout(resolveUpgrade, 2300);
