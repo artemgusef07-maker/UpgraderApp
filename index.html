@@ -1,22 +1,145 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Link to your new CSS file -->
+    <title>Telegram Upgrader App</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <h1>Balance: <span id="balanceDisplay">500.00</span></h1>
-        <button onclick="addMoney()">MINE COINS</button>
-        
-        <div id="inventoryList" style="margin-top:20px;"></div>
-        
-        <button onclick="resetState()" style="margin-top:50px; background:transparent; border:1px solid #444; color:#666;">FACTORY RESET</button>
+    <div class="phone-wrapper">
+        <!-- Top Balance Header -->
+        <div class="app-header">
+            <div class="u-coin-balance">
+                <span class="coin-logo">U</span>
+                <span id="balanceDisplay">500.0</span>
+            </div>
+            <button class="cache-purge-btn" onclick="clearLegacyData()">🔄 Reset</button>
+        </div>
+
+        <!-- TAB 1: TAP & CASES -->
+        <div id="clickerTab" class="tab-pane active-tab">
+            <div class="tap-zone">
+                <button class="tap-sphere" onclick="clickCoin()">👾</button>
+                <div class="tap-hint">⚡ +0.5 per tap</div>
+            </div>
+
+            <div class="section-divider">🎰 SERIEST CASES</div>
+            <div id="caseMenuGrid" class="case-selection-grid"></div>
+        </div>
+
+        <!-- TAB 2: UPGRADER -->
+        <div id="upgraderTab" class="tab-pane">
+            <div class="upgrader-deck">
+                <div class="chance-readout"><span id="chanceDisplay">0.00%</span> Win Chance</div>
+                
+                <div class="dial-container">
+                    <div id="upgraderWheel" class="dial-ring">
+                        <div id="wheelPointer" class="dial-needle"></div>
+                        <div class="dial-core"></div>
+                    </div>
+                </div>
+
+                <div class="preset-row">
+                    <button class="preset-btn" onclick="applyPresetMultiplier(2)">x2</button>
+                    <button class="preset-btn" onclick="applyPresetMultiplier(5)">x5</button>
+                    <button class="preset-btn" onclick="applyPresetChance(35)">35%</button>
+                    <button class="preset-btn" onclick="applyPresetChance(55)">55%</button>
+                    <button class="preset-btn" onclick="applyPresetChance(75)">75%</button>
+                </div>
+
+                <label class="instant-mode-toggle">
+                    <input type="checkbox" id="fastUpgrade">
+                    <span>⚡ Instant Roll</span>
+                </label>
+
+                <button class="action-trigger purple-theme" onclick="attemptUpgrade()" id="upgradeBtn">START UPGRADE</button>
+            </div>
+
+            <div class="section-divider">🎯 STAGING DOCK</div>
+            <div class="staging-dock">
+                <div id="stageWager" class="dock-slot empty">Select Wager</div>
+                <div class="dock-arrow">➔</div>
+                <div id="stageTarget" class="dock-slot empty">Select Target</div>
+            </div>
+
+            <div class="section-divider">🎒 YOUR ITEM FOR UPGRADE</div>
+            <div id="wagerGrid" class="item-grid-shelf"></div>
+
+            <div class="section-divider">🏬 TARGET SHOWROOM (PROFIT ONLY)</div>
+            <div id="targetGrid" class="item-grid-shelf"></div>
+        </div>
+
+        <!-- TAB 3: INVENTORY -->
+        <div id="profileTab" class="tab-pane">
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <span class="sc-val" id="statUpgrades">0</span>
+                    <span class="sc-lbl">Upgrades</span>
+                </div>
+                <div class="stat-card">
+                    <span class="sc-val" id="statItemsCount">0</span>
+                    <span class="sc-lbl">Inventory Count</span>
+                </div>
+            </div>
+            
+            <div class="section-divider">🎒 FULL INVENTORY</div>
+            <div id="profileInventory" class="item-grid-shelf"></div>
+        </div>
+
+        <!-- CASE DETAIL VIEW MODAL (Contains contents pool & quantity picker) -->
+        <div id="caseDetailsModal" class="modal-backdrop">
+            <div class="roller-window wide-scroll">
+                <div class="modal-close-header">
+                    <span id="inspectCaseName" style="font-weight:bold; font-size:16px;">Case Details</span>
+                    <button class="close-x" onclick="closeInspectModal()">✕</button>
+                </div>
+                
+                <div class="section-divider" style="margin-top:10px;">📦 CONTAINED ITEMS & CHANCES</div>
+                <div id="inspectItemsList" class="inspect-items-container"></div>
+
+                <div class="section-divider">🔢 SELECT QUANTITY</div>
+                <div class="quantity-selector-row">
+                    <button class="qty-btn active" id="qty-1" onclick="setUnboxQuantity(1)">1x</button>
+                    <button class="qty-btn" id="qty-2" onclick="setUnboxQuantity(2)">2x</button>
+                    <button class="qty-btn" id="qty-3" onclick="setUnboxQuantity(3)">3x</button>
+                    <button class="qty-btn" id="qty-4" onclick="setUnboxQuantity(4)">4x</button>
+                    <button class="qty-btn" id="qty-5" onclick="setUnboxQuantity(5)">5x</button>
+                </div>
+
+                <button class="action-trigger purchase-confirm-btn" id="purchaseCaseBtn" onclick="confirmCasePurchase()">
+                    OPEN FOR <span id="totalCaseCostDisplay">0</span> U
+                </button>
+            </div>
+        </div>
+
+        <!-- SMOOTH MULTI-ITEM ROLLER MODAL -->
+        <div id="unboxingModal" class="modal-backdrop">
+            <div class="roller-window">
+                <div class="roller-title" id="rollerCaseTitle">Opening Case...</div>
+                
+                <div class="roller-viewport">
+                    <div class="roller-center-line"></div>
+                    <div id="rollerTape" class="roller-tape"></div>
+                </div>
+
+                <!-- Container showing items won during multi-pull -->
+                <div id="multiResultsContainer" class="multi-results-grid"></div>
+
+                <button class="modal-claim-btn" id="modalClaimBtn" onclick="closeUnboxModal()">COLLECT BUNDLE</button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <div class="bottom-navigation-dock">
+            <button onclick="switchTab('clickerTab')" id="btn-clickerTab" class="nav-item active">⚡ Tap</button>
+            <button onclick="switchTab('upgraderTab')" id="btn-upgraderTab" class="nav-item">🔄 Upgrade</button>
+            <button onclick="switchTab('profileTab')" id="btn-profileTab" class="nav-item">👤 Profile</button>
+        </div>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="item.js"></script>
+    <script src="items.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
