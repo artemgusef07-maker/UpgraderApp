@@ -26,7 +26,6 @@
             </div>
 
             <div class="section-divider">🎰 SERIEST CASES</div>
-            <!-- The case grid will load here explicitly -->
             <div id="caseMenuGrid" class="case-selection-grid"></div>
         </div>
 
@@ -42,7 +41,6 @@
                     </div>
                 </div>
 
-                <!-- Case-Battle Style Presets -->
                 <div class="preset-row">
                     <button class="preset-btn" onclick="applyPresetMultiplier(2)">x2</button>
                     <button class="preset-btn" onclick="applyPresetMultiplier(5)">x5</button>
@@ -90,7 +88,33 @@
             <div id="profileInventory" class="item-grid-shelf"></div>
         </div>
 
-        <!-- SMOOTH HORIZONTAL ROLLER MODAL -->
+        <!-- CASE DETAIL VIEW MODAL (Contains contents pool & quantity picker) -->
+        <div id="caseDetailsModal" class="modal-backdrop">
+            <div class="roller-window wide-scroll">
+                <div class="modal-close-header">
+                    <span id="inspectCaseName" style="font-weight:bold; font-size:16px;">Case Details</span>
+                    <button class="close-x" onclick="closeInspectModal()">✕</button>
+                </div>
+                
+                <div class="section-divider" style="margin-top:10px;">📦 CONTAINED ITEMS & CHANCES</div>
+                <div id="inspectItemsList" class="inspect-items-container"></div>
+
+                <div class="section-divider">🔢 SELECT QUANTITY</div>
+                <div class="quantity-selector-row">
+                    <button class="qty-btn active" id="qty-1" onclick="setUnboxQuantity(1)">1x</button>
+                    <button class="qty-btn" id="qty-2" onclick="setUnboxQuantity(2)">2x</button>
+                    <button class="qty-btn" id="qty-3" onclick="setUnboxQuantity(3)">3x</button>
+                    <button class="qty-btn" id="qty-4" onclick="setUnboxQuantity(4)">4x</button>
+                    <button class="qty-btn" id="qty-5" onclick="setUnboxQuantity(5)">5x</button>
+                </div>
+
+                <button class="action-trigger purchase-confirm-btn" id="purchaseCaseBtn" onclick="confirmCasePurchase()">
+                    OPEN FOR <span id="totalCaseCostDisplay">0</span> U
+                </button>
+            </div>
+        </div>
+
+        <!-- SMOOTH MULTI-ITEM ROLLER MODAL -->
         <div id="unboxingModal" class="modal-backdrop">
             <div class="roller-window">
                 <div class="roller-title" id="rollerCaseTitle">Opening Case...</div>
@@ -100,13 +124,10 @@
                     <div id="rollerTape" class="roller-tape"></div>
                 </div>
 
-                <div id="rollerResultCard" class="roller-result-card">
-                    <div id="resultEmoji" style="font-size: 48px;">👾</div>
-                    <div id="resultName" style="font-weight: bold; margin: 5px 0;">Item Name</div>
-                    <div id="resultValue" style="color: #ffca28; font-size: 14px;">0 U</div>
-                </div>
+                <!-- Container showing items won during multi-pull -->
+                <div id="multiResultsContainer" class="multi-results-grid"></div>
 
-                <button class="modal-claim-btn" id="modalClaimBtn" onclick="closeUnboxModal()">COLLECT ITEM</button>
+                <button class="modal-claim-btn" id="modalClaimBtn" onclick="closeUnboxModal()">COLLECT BUNDLE</button>
             </div>
         </div>
 

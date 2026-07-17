@@ -31,7 +31,6 @@ body {
     padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer;
 }
 
-/* Hard Tab Isolation Fix */
 .tab-pane { display: none !important; }
 .tab-pane.active-tab { display: block !important; }
 
@@ -47,7 +46,7 @@ body {
 .tap-sphere:active { transform: scale(0.93); }
 .tap-hint { font-size: 12px; color: #61617a; margin-top: 8px; }
 
-/* Case Selector List */
+/* Case Grid Container Layout */
 .case-selection-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .case-row-card {
     background: #13131f; border: 1px solid #1f1f33; padding: 14px;
@@ -55,41 +54,66 @@ body {
 }
 .case-details { display: flex; flex-direction: column; gap: 3px; }
 .case-title { font-weight: 700; font-size: 14px; color: #fff; }
-.case-odds-preview { font-size: 11px; color: #ff6b6b; font-weight: 600; }
+.case-odds-preview { font-size: 11px; color: #6e6e82; font-weight: 600; }
 .case-price-tag {
     background: #242438; border: 1px solid #3a3a59; color: #ffca28;
     padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 700;
 }
 
-/* Case Battle Presets Row */
-.preset-row {
-    display: flex; gap: 6px; width: 100%; margin: 12px 0; justify-content: center;
+/* Modal Windows & Display Management */
+.modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(4, 4, 6, 0.95); display: none; justify-content: center;
+    align-items: center; z-index: 999; padding: 16px; box-sizing: border-box;
 }
-.preset-btn {
-    flex: 1; background: #1c1c2e; border: 1px solid #2d2d44; color: #b5b5c3;
-    padding: 8px 4px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+.roller-window { 
+    background: #11111a; border: 1px solid #222238; border-radius: 20px; 
+    width: 100%; max-width: 360px; padding: 20px; box-sizing: border-box; text-align: center; 
 }
-.preset-btn:border { background: #25253d; color: #fff; }
+.wide-scroll { max-height: 90vh; overflow-y: auto; text-align: left; }
+.modal-close-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222238; padding-bottom: 8px; }
+.close-x { background: transparent; border: none; color: #6e6e82; font-size: 16px; cursor: pointer; }
 
-/* Grids and Items */
-.item-grid-shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 280px; overflow-y: auto; }
-.mini-item-card {
-    background: #12121c; border: 1px solid #1f1f33; border-radius: 12px;
-    padding: 10px 4px; text-align: center; cursor: pointer;
+/* Inspect View List Row */
+.inspect-items-container { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; margin-bottom: 10px; padding-right: 4px; }
+.inspect-item-row {
+    background: #171726; padding: 8px 12px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: space-between; font-size: 13px;
 }
+.inspect-item-left { display: flex; align-items: center; gap: 8px; }
+.inspect-item-price { color: #ffca28; font-weight: bold; }
+.inspect-item-chance { color: #34c759; font-weight: bold; font-family: monospace; }
+
+/* Multi-Quantity Selection Config */
+.quantity-selector-row { display: flex; gap: 6px; margin: 10px 0 20px 0; }
+.qty-btn {
+    flex: 1; background: #1c1c2e; border: 1px solid #2d2d44; color: #b5b5c3;
+    padding: 10px 0; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.qty-btn.active { background: #5856d6; color: #fff; border-color: #7d7aff; }
+.purchase-confirm-btn { background: #34c759; color: #fff; font-weight: bold; text-align: center; box-shadow: 0 4px 12px rgba(52, 199, 89, 0.2); }
+
+/* Horizontal Unboxing Strip Elements */
+.roller-viewport { position: relative; width: 100%; height: 80px; background: #07070a; border-radius: 12px; border: 1px solid #222235; overflow: hidden; margin-bottom: 15px; }
+.roller-center-line { position: absolute; left: 50%; top: 0; width: 2px; height: 100%; background: #ffd700; z-index: 10; transform: translateX(-50%); box-shadow: 0 0 8px #ffd700; }
+.roller-tape { display: flex; align-items: center; position: absolute; left: 0; top: 0; height: 100%; gap: 10px; padding-left: 150px; will-change: transform; }
+.roller-card-item { min-width: 60px; max-width: 60px; height: 60px; background: #161626; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+
+/* Multi Drop Output Window Grid */
+.multi-results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 15px 0; max-height: 180px; overflow-y: auto; }
+.bundle-result-card { background: #1c1c2e; border: 1px solid #2e2e4a; padding: 8px 4px; border-radius: 10px; text-align: center; }
+
+.preset-row { display: flex; gap: 6px; width: 100%; margin: 12px 0; justify-content: center; }
+.preset-btn { flex: 1; background: #1c1c2e; border: 1px solid #2d2d44; color: #b5b5c3; padding: 8px 4px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+.item-grid-shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 250px; overflow-y: auto; width: 100%; }
+.mini-item-card { background: #12121c; border: 1px solid #1f1f33; border-radius: 12px; padding: 10px 4px; text-align: center; cursor: pointer; }
 .mini-item-card.selected { border-color: #5856d6; background: #1b1b30; }
 .mini-item-card .mic-emoji { font-size: 28px; display: block; margin-bottom: 4px; }
 .mini-item-card .mic-val { color: #ffca28; font-size: 11px; font-weight: 700; }
-.quick-sell-btn {
-    background: #2d1414; color: #ff453a; border: none; font-size: 9px;
-    font-weight: 700; padding: 4px; border-radius: 6px; margin-top: 6px; width: 90%; cursor: pointer;
-}
+.quick-sell-btn { background: #2d1414; color: #ff453a; border: none; font-size: 9px; font-weight: 700; padding: 4px; border-radius: 6px; margin-top: 6px; width: 90%; cursor: pointer; }
 
-/* Upgrader Wheel Setup */
-.upgrader-deck {
-    background: #0f0f18; border: 1px solid #1c1c2d; padding: 16px;
-    border-radius: 18px; display: flex; flex-direction: column; align-items: center;
-}
+.upgrader-deck { background: #0f0f18; border: 1px solid #1c1c2d; padding: 16px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
 .chance-readout { color: #34c759; font-size: 20px; font-weight: 800; margin-bottom: 12px; }
 .dial-container { position: relative; width: 150px; height: 150px; margin-bottom: 10px; }
 .dial-ring { width: 150px; height: 150px; border-radius: 50%; background: #e74c3c; position: relative; }
@@ -99,41 +123,18 @@ body {
 .action-trigger { border: none; padding: 14px; border-radius: 12px; width: 100%; font-size: 14px; font-weight: bold; color: white; cursor: pointer; }
 .purple-theme { background: #5856d6; }
 
-/* Staging */
 .staging-dock { display: flex; align-items: center; gap: 8px; width:100%; }
-.dock-slot {
-    flex: 1; background: #10101a; border: 2px dashed #202033; border-radius: 12px;
-    padding: 10px; text-align: center; font-size: 12px; color: #4e4e66; font-weight: bold;
-    min-height: 48px; display: flex; flex-direction: column; justify-content: center;
-}
+.dock-slot { flex: 1; background: #10101a; border: 2px dashed #202033; border-radius: 12px; padding: 10px; text-align: center; font-size: 12px; color: #4e4e66; font-weight: bold; min-height: 48px; display: flex; flex-direction: column; justify-content: center; }
 .dock-slot.active { border-style: solid; background: #161624; color: #fff; border-color: #3a3a55; }
 .dock-arrow { color: #2d2d44; font-weight: bold; }
 
-/* Analytics Info */
 .dashboard-stats { display: flex; gap: 8px; width: 100%; }
-.stat-card {
-    flex: 1; background: #0f0f18; border: 1px solid #1c1c2d; padding: 12px;
-    border-radius: 12px; display: flex; flex-direction: column; align-items: center;
-}
+.stat-card { flex: 1; background: #0f0f18; border: 1px solid #1c1c2d; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; }
 .sc-val { font-size: 18px; font-weight: bold; }
 .sc-lbl { font-size: 11px; color: #6e6e82; }
 
-/* Modal */
-.modal-backdrop {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(4, 4, 6, 0.95); display: none; justify-content: center;
-    align-items: center; z-index: 999; padding: 16px; box-sizing: border-box;
-}
-.roller-window { background: #11111a; border: 1px solid #222238; border-radius: 20px; width: 100%; max-width: 360px; padding: 20px; box-sizing: border-box; text-align: center; }
-.roller-title { font-size: 15px; font-weight: bold; color: #8e8e93; margin-bottom: 15px; }
-.roller-viewport { position: relative; width: 100%; height: 80px; background: #07070a; border-radius: 12px; border: 1px solid #222235; overflow: hidden; margin-bottom: 15px; }
-.roller-center-line { position: absolute; left: 50%; top: 0; width: 2px; height: 100%; background: #ffd700; z-index: 10; transform: translateX(-50%); box-shadow: 0 0 8px #ffd700; }
-.roller-tape { display: flex; align-items: center; position: absolute; left: 0; top: 0; height: 100%; gap: 10px; padding-left: 150px; will-change: transform; }
-.roller-card-item { min-width: 60px; max-width: 60px; height: 60px; background: #161626; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
-.roller-result-card { display: none; margin-bottom: 20px; }
 .modal-claim-btn { background: #ffffff; color: #000000; border: none; padding: 12px; border-radius: 12px; font-weight: bold; width: 100%; display: none; cursor: pointer; }
 
-/* Footer */
 .bottom-navigation-dock {
     position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
     width: 100%; max-width: 420px; height: 68px; background: #0f0f18;
