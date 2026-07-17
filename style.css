@@ -1,79 +1,71 @@
 body {
-    background-color: #121212;
-    color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #0b0b0e;
+    color: #f1f1f4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0;
     padding: 15px;
+    padding-bottom: 50px;
 }
-.header { text-align: center; margin-bottom: 15px; }
-.nav { display: flex; gap: 10px; margin-bottom: 20px; }
+.header { display: flex; justify-content: center; margin-bottom: 20px; }
+.balance-pill {
+    background: #161622; border: 1px solid #2d2d3f; padding: 10px 20px;
+    border-radius: 30px; font-weight: bold; font-size: 18px; color: #ffd700;
+}
+.nav { display: flex; gap: 8px; margin-bottom: 20px; background: #161622; padding: 5px; border-radius: 12px; }
 .nav button {
-    flex: 1; padding: 10px; background: #2c2c2c; color: white;
-    border: none; border-radius: 8px; cursor: pointer;
+    flex: 1; padding: 12px; background: transparent; color: #8e8e93;
+    border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;
 }
+.nav button.active { background: #242438; color: #ffffff; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
-.card { background: #1e1e1e; padding: 15px; border-radius: 12px; }
-.btn {
-    background: #4caf50; color: white; border: none; padding: 12px;
-    border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer;
-}
-.btn:active { background: #388e3c; }
-select { padding: 10px; background: #2c2c2c; color: white; border-radius: 5px; border: 1px solid #444; }
+.card { background: #12121c; padding: 20px; border-radius: 16px; border: 1px solid #1f1f30; margin-bottom: 20px; }
+.clicker-container { text-align: center; }
 .clicker-btn {
-    background: #f39c12; width: 150px; height: 150px; border-radius: 50%;
-    font-size: 24px; font-weight: bold; border: 5px solid #e67e22;
-    margin: 0 auto; display: block; cursor: pointer; box-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
+    background: linear-gradient(145deg, #242438, #161622); width: 140px; height: 140px; border-radius: 50%;
+    font-size: 60px; border: 4px solid #3a3a55; margin: 20px auto; display: block; cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4); transition: transform 0.05s;
 }
-.clicker-btn:active { transform: scale(0.95); }
-.inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.item-box { background: #2a2a2a; padding: 10px; border-radius: 8px; text-align: center; border-left: 5px solid gray; font-size: 14px;}
-
-/* --- UPGRADER WHEEL STYLES --- */
-.wheel-container {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-    overflow: hidden;
+.clicker-btn:active { transform: scale(0.92); }
+.btn {
+    color: white; border: none; padding: 14px; border-radius: 10px;
+    width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
 }
+.purchase-btn { background: #34c759; }
+.purchase-btn:hover { background: #2ebd4f; }
+.action-btn { background: #5856d6; font-size: 18px; letter-spacing: 0.5px; }
+.wheel-card { display: flex; flex-direction: column; align-items: center; }
+.chance-header { margin: 0 0 15px 0; color: #34c759; }
+.wheel-container { position: relative; width: 200px; height: 200px; margin-bottom: 15px; }
 .wheel {
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    /* This is the pie chart. It starts all red (0% win chance) */
-    background: conic-gradient(#4caf50 0% 0%, #e74c3c 0% 100%); 
-    position: relative;
-    box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    transition: background 0.5s ease; 
+    width: 200px; height: 200px; border-radius: 50%;
+    background: conic-gradient(#e74c3c 0deg, #e74c3c 360deg);
+    position: relative; transition: background 0.3s ease;
 }
 .wheel-center {
-    width: 150px;
-    height: 150px;
-    background: #1e1e1e; /* Matches the card background to make it a ring */
-    border-radius: 50%;
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    z-index: 2;
+    width: 170px; height: 170px; background: #12121c;
+    border-radius: 50%; position: absolute; top: 15px; left: 15px; z-index: 2;
 }
 .pointer {
-    width: 4px;
-    height: 90px;
-    background: white;
-    position: absolute;
-    top: 0;
-    left: 88px; /* Centers the pointer */
-    transform-origin: bottom center; /* Makes it spin from the bottom */
-    z-index: 3;
+    width: 4px; height: 100px; background: #ffffff; position: absolute;
+    top: 0; left: 98px; transform-origin: bottom center; z-index: 3;
     transform: rotate(0deg);
 }
-/* Creates the little arrow head at the top of the pointer */
 .pointer::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -6px;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-bottom: 15px solid white;
+    content: ''; position: absolute; top: -6px; left: -6px;
+    border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #ffffff;
+}
+.toggle-container { margin-bottom: 15px; font-size: 14px; color: #aeaeb2; }
+.selection-grid, .inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.item-card {
+    background: #161622; padding: 15px; border-radius: 12px; border: 2px solid #2d2d3f;
+    text-align: center; cursor: pointer; position: relative; transition: 0.2s;
+}
+.item-card .emoji { font-size: 32px; margin-bottom: 8px; display: block; }
+.item-card .name { font-weight: bold; font-size: 14px; display: block; margin-bottom: 4px; }
+.item-card .price { color: #ffd700; font-size: 13px; font-weight: 600; }
+.item-card.selected { border-color: #5856d6; background: #1f1f35; box-shadow: 0 0 12px rgba(88, 86, 214, 0.4); }
+.sell-btn {
+    background: #ff3b30; color: white; border: none; padding: 5px 10px;
+    border-radius: 6px; font-size: 11px; font-weight: bold; margin-top: 8px; cursor: pointer; width: 100%;
 }
