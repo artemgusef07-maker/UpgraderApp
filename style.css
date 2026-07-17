@@ -1,0 +1,30 @@
+body {
+    background-color: #121212;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 15px;
+}
+.header { text-align: center; margin-bottom: 15px; }
+.nav { display: flex; gap: 10px; margin-bottom: 20px; }
+.nav button {
+    flex: 1; padding: 10px; background: #2c2c2c; color: white;
+    border: none; border-radius: 8px; cursor: pointer;
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #1e1e1e; padding: 15px; border-radius: 12px; }
+.btn {
+    background: #4caf50; color: white; border: none; padding: 12px;
+    border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer;
+}
+.btn:active { background: #388e3c; }
+select { padding: 10px; background: #2c2c2c; color: white; border-radius: 5px; border: 1px solid #444; }
+.clicker-btn {
+    background: #f39c12; width: 150px; height: 150px; border-radius: 50%;
+    font-size: 24px; font-weight: bold; border: 5px solid #e67e22;
+    margin: 0 auto; display: block; cursor: pointer; box-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
+}
+.clicker-btn:active { transform: scale(0.95); }
+.inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.item-box { background: #2a2a2a; padding: 10px; border-radius: 8px; text-align: center; border-left: 5px solid gray; font-size: 14px;}

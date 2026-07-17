@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Coin Upgrader</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Connects your app to Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h2>Balance: <span id="balanceDisplay">100.0</span> u-coins</h2>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div class="nav">
+        <button onclick="switchTab('clickerTab')">Clicker</button>
+        <button onclick="switchTab('upgraderTab')">Upgrader</button>
+        <button onclick="switchTab('profileTab')">Profile</button>
+    </div>
+
+    <!-- CLICKER TAB -->
+    <div id="clickerTab" class="tab-content active card">
+        <h3 style="text-align: center;">Need u-coins?</h3>
+        <button class="clicker-btn" onclick="clickCoin()">TAP</button>
+        <p style="text-align: center; margin-top: 15px;">+0.1 per click (25ms cooldown)</p>
+        <button class="btn" onclick="buyCase()">Buy Random Item Case (10 u-coins)</button>
+    </div>
+
+    <!-- UPGRADER TAB -->
+    <div id="upgraderTab" class="tab-content card">
+        <h3>Upgrader</h3>
+        <label>Your Item to Risk:</label>
+        <select id="inventorySelect" onchange="updateChance()" style="width: 100%; margin-bottom: 10px;"></select>
+        
+        <label>Target Item to Win:</label>
+        <select id="targetSelect" onchange="updateChance()" style="width: 100%; margin-bottom: 10px;"></select>
+        
+        <h2 style="text-align: center; color: #4caf50;">Win Chance: <span id="chanceDisplay">0.00%</span></h2>
+        
+        <div style="margin: 15px 0;">
+            <input type="checkbox" id="fastUpgrade"> <label for="fastUpgrade">Fast Upgrade (Skip Animation)</label>
+        </div>
+        
+        <button class="btn" onclick="attemptUpgrade()" id="upgradeBtn">UPGRADE</button>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="profileTab" class="tab-content card">
+        <h3>Your Profile</h3>
+        <p>Total Upgrades Tried: <span id="statUpgrades">0</span></p>
+        
+        <h4>Your Inventory</h4>
+        <div id="profileInventory" class="inventory-grid"></div>
+        
+        <h4 style="margin-top:20px;">Local Leaderboard (Best Pulls)</h4>
+        <div id="leaderboardList" class="inventory-grid"></div>
+    </div>
+
+    <script src="items.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
