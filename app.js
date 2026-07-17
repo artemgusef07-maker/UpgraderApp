@@ -4,10 +4,11 @@
 let balance = parseFloat(localStorage.getItem('balance')) || 500.0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 let stats = JSON.parse(localStorage.getItem('stats')) || { upgradesTried: 0 };
+let unlockedItems = JSON.parse(localStorage.getItem('unlockedItems')) || []; // Collection Book Bookmarks
 let lastClickTime = 0;
 
-let selectedWagerIndices = []; // Tracks up to 6 items for multi-upgrade
-let selectedWagerIndex = null;   // Compatibility tracker for legacy calls
+let selectedWagerIndices = []; 
+let selectedWagerIndex = null;   // Fully synced with legacy layout controllers
 let selectedTargetItem = null;
 let isRolling = false;
 let currentInspectCaseIndex = null;
@@ -20,6 +21,13 @@ window.onload = () => {
     if (window.Telegram && window.Telegram.WebApp) { 
         window.Telegram.WebApp.ready(); 
     }
+    
+    // Auto-discover historical items currently residing in user's active vault
+    inventory.forEach(item => {
+        if (!unlockedItems.includes(item.emoji)) unlockedItems.push(item.emoji);
+    });
+    localStorage.setItem('unlockedItems', JSON.stringify(unlockedItems));
+    
     renderCaseMenu();
     updateUI();
 };
@@ -42,6 +50,7 @@ function saveGame() {
     localStorage.setItem('balance', balance);
     localStorage.setItem('inventory', JSON.stringify(inventory));
     localStorage.setItem('stats', JSON.stringify(stats));
+    localStorage.setItem('unlockedItems', JSON.stringify(unlockedItems));
     updateUI();
 }
 
@@ -76,21 +85,43 @@ function clickCoin() {
 }
 
 function clearLegacyData() {
-    if (isRolling) {
-        alert("Action locked while active roll calculation sequence is spinning!");
-        return;
-    }
-    const confirmReset = confirm("Are you sure you want to clear your save state?");
-    if (!confirmReset) return;
+    if (isRolling) return alert("Action locked while calculations are spinning!");
+    if (!confirm("Are you sure you want to clear your save state?")) return;
 
     localStorage.clear();
-    balance = 500.0; inventory = []; stats = { upgradesTried: 0 };
+    balance = 500.0; inventory = []; stats = { upgradesTried: 0 }; unlockedItems = [];
     selectedWagerIndices = []; selectedTargetItem = null; selectedWagerIndex = null;
     saveGame(); renderCaseMenu(); renderUpgraderGrids();
 }
 
 // ==========================================
-// 3. CASE UNBOXING SYSTEM (MULTI-ROW PARALLEL)
+// 3. ITEM COLLECTION INDEX (NEW FEATURE)
+// ==========================================
+function openIndexModal() {
+    const grid = document.getElementById('indexGrid');
+    grid.innerHTML = '';
+
+    itemPool.forEach(item => {
+        let isUnlocked = unlockedItems.includes(item.emoji);
+        let card = document.createElement('div');
+        card.className = `index-item-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+        
+        if (isUnlocked) {
+            card.innerHTML = `<span class="idx-emoji">${item.emoji}</span><span class="idx-val" style="color:#ffca28;">${item.value} U</span>`;
+        } else {
+            card.innerHTML = `<span class="idx-emoji">❓</span><span class="idx-val" style="color:#5c5c7a;">Locked</span>`;
+        }
+        grid.appendChild(card);
+    });
+    document.getElementById('itemIndexModal').style.display = 'flex';
+}
+
+function closeIndexModal() {
+    document.getElementById('itemIndexModal').style.display = 'none';
+}
+
+// ==========================================
+// 4. CASE UNBOXING SYSTEM
 // ==========================================
 function renderCaseMenu() {
     const menu = document.getElementById('caseMenuGrid');
@@ -163,10 +194,7 @@ function confirmCasePurchase() {
     const targetCase = casesData[currentInspectCaseIndex];
     const totalCost = targetCase.cost * currentSelectedQuantity;
 
-    if (balance < totalCost) {
-        alert("Insufficient balance!");
-        return;
-    }
+    if (balance < totalCost) return alert("Insufficient balance!");
 
     closeInspectModal();
     isRolling = true;
@@ -184,6 +212,9 @@ function confirmCasePurchase() {
     for (let q = 0; q < currentSelectedQuantity; q++) {
         let rolledItem = rollFromCase(targetCase);
         itemsWonList.push(rolledItem);
+
+        // Track inside index log arrays
+        if (!unlockedItems.includes(rolledItem.emoji)) unlockedItems.push(rolledItem.emoji);
 
         let viewport = document.createElement('div');
         viewport.className = 'roller-viewport';
@@ -237,7 +268,7 @@ function closeUnboxModal() {
 }
 
 // ==========================================
-// 4. MULTI-ITEM UPGRADER MECHANICS (MAX 6)
+// 5. UPGRADER ENGINE (INTEGRATED PARALYSIS REPAIR)
 // ==========================================
 function sellItem(index, event) {
     if (isRolling) return;
@@ -246,8 +277,8 @@ function sellItem(index, event) {
     inventory.splice(index, 1);
     
     selectedWagerIndices = [];
-    selectedTargetItem = null;
     selectedWagerIndex = null;
+    selectedTargetItem = null;
     
     saveGame();
     if(document.getElementById('upgraderTab').classList.contains('active-tab')) renderUpgraderGrids();
@@ -268,13 +299,12 @@ function renderUpgraderGrids() {
             if (isSelected) {
                 selectedWagerIndices = selectedWagerIndices.filter(i => i !== index);
             } else {
-                if (selectedWagerIndices.length >= 6) {
-                    alert("Maximum limit of 6 wager items reached!");
-                    return;
-                }
+                if (selectedWagerIndices.length >= 6) return alert("Maximum limit of 6 wager items reached!");
                 selectedWagerIndices.push(index);
             }
             
+            // Sync legacy fallback trackers instantly
+            selectedWagerIndex = selectedWagerIndices.length > 0 ? selectedWagerIndices[0] : null;
             selectedTargetItem = null; 
             
             let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
@@ -300,14 +330,18 @@ function renderUpgraderGrids() {
     const targetGrid = document.getElementById('targetGrid');
     targetGrid.innerHTML = '';
     
-    if (selectedWagerIndices.length === 0) {
+    // Evaluate combined wager pool value dynamically
+    let totalWagerValue = selectedWagerIndices.reduce((sum, idx) => sum + (inventory[idx] ? inventory[idx].value : 0), 0);
+    if (totalWagerValue === 0 && selectedWagerIndex !== null && inventory[selectedWagerIndex]) {
+        totalWagerValue = inventory[selectedWagerIndex].value;
+    }
+
+    if (totalWagerValue === 0) {
         targetGrid.innerHTML = '<div style="color:#6e6e82; padding:10px;">Select up to 6 wager items first!</div>';
         return;
     }
 
-    let totalWagerValue = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
     const validTargets = itemPool.filter(item => item.value > totalWagerValue);
-
     if (validTargets.length === 0) {
         targetGrid.innerHTML = '<div style="color:#ff6b6b; padding:10px;">Max upgrade boundary tier reached!</div>';
         return;
@@ -331,19 +365,29 @@ function renderUpgraderGrids() {
 }
 
 function applyPresetMultiplier(mult) {
-    if (selectedWagerIndices.length === 0) return alert("Select wager items first!");
-    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + (inventory[idx] ? inventory[idx].value : 0), 0);
+    if (totalWagerVal === 0 && selectedWagerIndex !== null && inventory[selectedWagerIndex]) {
+        totalWagerVal = inventory[selectedWagerIndex].value;
+    }
+    if (totalWagerVal === 0) return alert("Select wager cards first!");
     findAndSelectClosestTarget(totalWagerVal * mult);
 }
 
 function applyPresetChance(chancePercent) {
-    if (selectedWagerIndices.length === 0) return alert("Select wager items first!");
-    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + (inventory[idx] ? inventory[idx].value : 0), 0);
+    if (totalWagerVal === 0 && selectedWagerIndex !== null && inventory[selectedWagerIndex]) {
+        totalWagerVal = inventory[selectedWagerIndex].value;
+    }
+    if (totalWagerVal === 0) return alert("Select wager cards first!");
     findAndSelectClosestTarget(totalWagerVal / (chancePercent / 100));
 }
 
 function findAndSelectClosestTarget(targetValue) {
-    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + (inventory[idx] ? inventory[idx].value : 0), 0);
+    if (totalWagerVal === 0 && selectedWagerIndex !== null && inventory[selectedWagerIndex]) {
+        totalWagerVal = inventory[selectedWagerIndex].value;
+    }
+    
     const validTargets = itemPool.filter(item => item.value > totalWagerVal);
     if(validTargets.length === 0) return;
 
@@ -359,12 +403,17 @@ function findAndSelectClosestTarget(targetValue) {
 }
 
 function updateChance() {
-    if (selectedWagerIndices.length === 0 || selectedTargetItem === null) {
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + (inventory[idx] ? inventory[idx].value : 0), 0);
+    if (totalWagerVal === 0 && selectedWagerIndex !== null && inventory[selectedWagerIndex]) {
+        totalWagerVal = inventory[selectedWagerIndex].value;
+    }
+
+    if (totalWagerVal === 0 || selectedTargetItem === null) {
         document.getElementById('chanceDisplay').innerText = "0.00%";
         document.getElementById('upgraderWheel').style.background = `#e74c3c`;
         return;
     }
-    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+
     let chance = (totalWagerVal / selectedTargetItem.value) * 100;
     if (chance > 100) chance = 100;
     document.getElementById('chanceDisplay').innerText = chance.toFixed(2) + "%";
@@ -376,8 +425,12 @@ function updateChance() {
 }
 
 function attemptUpgrade() {
-    if (selectedWagerIndices.length === 0 || selectedTargetItem === null) return alert("Staging cards are empty!");
-    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + (inventory[idx] ? inventory[idx].value : 0), 0);
+    if (totalWagerVal === 0 && selectedWagerIndex !== null && inventory[selectedWagerIndex]) {
+        totalWagerVal = inventory[selectedWagerIndex].value;
+    }
+    
+    if (totalWagerVal === 0 || selectedTargetItem === null) return alert("Staging cards are empty!");
     let chance = (totalWagerVal / selectedTargetItem.value) * 100;
     
     isRolling = true;
@@ -395,17 +448,24 @@ function attemptUpgrade() {
     let totalSpins = 1440 + targetDegree;
 
     function resolveUpgrade() {
-        selectedWagerIndices.sort((a, b) => b - a);
-        selectedWagerIndices.forEach(idx => inventory.splice(idx, 1));
+        // Clear items safely using active array parameters
+        if (selectedWagerIndices.length > 0) {
+            selectedWagerIndices.sort((a, b) => b - a);
+            selectedWagerIndices.forEach(idx => inventory.splice(idx, 1));
+        } else if (selectedWagerIndex !== null) {
+            inventory.splice(selectedWagerIndex, 1);
+        }
 
         if (isWin) {
             inventory.push(selectedTargetItem);
+            if (!unlockedItems.includes(selectedTargetItem.emoji)) unlockedItems.push(selectedTargetItem.emoji);
             alert(`🎉 Success! Items merged into ${selectedTargetItem.emoji}`);
         } else {
             alert("💥 Boom! Upgrade exploded. All wagered items lost.");
         }
         
         selectedWagerIndices = [];
+        selectedWagerIndex = null;
         selectedTargetItem = null;
         document.getElementById('stageWager').className = "dock-slot empty";
         document.getElementById('stageWager').innerText = "Select Wager";

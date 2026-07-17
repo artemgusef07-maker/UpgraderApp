@@ -166,3 +166,25 @@ body {
     border: 1px solid #222235; 
     overflow: hidden; 
 }
+
+/* APPEND TO THE BOTTOM OF style.css */
+.index-item-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 5px;
+    border-radius: 8px;
+    background: #111116;
+    border: 1px solid #22222b;
+    transition: all 0.2s ease;
+}
+.index-item-card.unlocked {
+    border-color: #ffca28;
+    background: #1a1a24;
+}
+.index-item-card.locked {
+    opacity: 0.4;
+}
+.idx-emoji { font-size: 22px; margin-bottom: 4px; }
+.idx-val { font-size: 10px; font-weight: bold; }
