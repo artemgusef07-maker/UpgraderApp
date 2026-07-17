@@ -3,8 +3,12 @@ let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 let stats = JSON.parse(localStorage.getItem('stats')) || { upgradesTried: 0 };
 let lastClickTime = 0;
 
-let selectedWagerIndex = null;
+/* REPLACE THESE COMPONENT TRACKERS AT THE TOP OF app.js */
+let selectedWagerIndices = []; // Now stores up to 6 item indices
 let selectedTargetItem = null;
+let isRolling = false;
+let currentInspectCaseIndex = null;
+let currentSelectedQuantity = 1;
 
 // Lock handles to block game breaking resets during active rolls
 let isRolling = false;
@@ -19,18 +23,30 @@ window.onload = () => {
 
 function clearLegacyData() {
     if (isRolling) {
-        alert("You cannot reset the app database while a roll sequence is actively running!");
+        alert("Action locked while active roll calculation sequence is spinning!");
         return;
     }
-    const confirmReset = confirm("Are you sure you want to clear your save state? This will reset your coins back to 500.0.");
+    const confirmReset = confirm("Are you sure you want to clear your save state?");
     if (!confirmReset) return;
 
     localStorage.clear();
     balance = 500.0; inventory = []; stats = { upgradesTried: 0 };
-    selectedWagerIndex = null; selectedTargetItem = null;
+    selectedWagerIndices = []; selectedTargetItem = null;
+    saveGame(); renderCaseMenu(); renderUpgraderGrids();
+}
+
+function sellItem(index, event) {
+    if (isRolling) return;
+    event.stopPropagation();
+    balance += Math.floor(inventory[index].value * 0.7);
+    inventory.splice(index, 1);
+    
+    // Wipe selections if the item sold was inside the staging deck
+    selectedWagerIndices = [];
+    selectedTargetItem = null;
+    
     saveGame();
-    renderCaseMenu();
-    renderUpgraderGrids();
+    if(document.getElementById('upgraderTab').classList.contains('active-tab')) renderUpgraderGrids();
 }
 
 function switchTab(tabId) {
@@ -169,50 +185,61 @@ function confirmCasePurchase() {
     balance -= totalCost;
 
     let itemsWonList = [];
-    for (let q = 0; q < currentSelectedQuantity; q++) {
-        itemsWonList.push(rollFromCase(targetCase));
-    }
+    const wrappers = document.getElementById('multiRollersWrapper');
+    wrappers.innerHTML = ''; // Wipe legacy views
+    document.getElementById('multiResultsContainer').innerHTML = '';
+    document.getElementById('modalClaimBtn').style.display = 'none';
 
     document.getElementById('rollerCaseTitle').innerText = `Opening ${currentSelectedQuantity}x ${targetCase.name}`;
-    
-    // Clear and prepare Modal
-    const resultsGrid = document.getElementById('multiResultsContainer');
-    resultsGrid.innerHTML = ''; // Clear old items
-    document.getElementById('modalClaimBtn').style.display = 'none';
-    
-    // Reset Tape
-    const tape = document.getElementById('rollerTape');
-    tape.style.transition = 'none';
-    tape.style.transform = 'translateX(0px)';
-    tape.innerHTML = '';
 
-    // Generate random items for the scroll, end with the last item in the list
-    for(let i=0; i<40; i++) {
-        let card = document.createElement('div');
-        card.className = 'roller-card-item';
-        let randomMockItem = (i === 35) ? itemsWonList[itemsWonList.length - 1] : itemPool[Math.floor(Math.random() * itemPool.length)];
-        card.innerText = randomMockItem.emoji;
-        tape.appendChild(card);
+    // 1. Build and stack individual, parallel viewports dynamically
+    let tapeElements = [];
+    for (let q = 0; q < currentSelectedQuantity; q++) {
+        let rolledItem = rollFromCase(targetCase);
+        itemsWonList.push(rolledItem);
+
+        let viewport = document.createElement('div');
+        viewport.className = 'roller-viewport';
+        viewport.innerHTML = `<div class="roller-center-line"></div>`;
+
+        let tape = document.createElement('div');
+        tape.className = 'roller-tape';
+        tape.id = `tape-row-${q}`;
+
+        // Populate items inside this specific case tape path
+        for (let i = 0; i < 40; i++) {
+            let card = document.createElement('div');
+            card.className = 'roller-card-item';
+            let randomMockItem = (i === 35) ? rolledItem : itemPool[Math.floor(Math.random() * itemPool.length)];
+            card.innerText = randomMockItem.emoji;
+            tape.appendChild(card);
+        }
+
+        viewport.appendChild(tape);
+        wrappers.appendChild(viewport);
+        tapeElements.push(tape);
     }
 
     document.getElementById('unboxingModal').style.display = 'flex';
 
-    // Animation: Open "Stacked" cases (Revealing items one by one in the grid)
+    // 2. Trigger synchronized horizontal roll animations
     setTimeout(() => {
-        tape.style.transition = 'transform 3s cubic-bezier(0.1, 0.8, 0.1, 1)';
-        tape.style.transform = 'translateX(-2300px)';
+        tapeElements.forEach(tape => {
+            tape.style.transition = 'transform 3s cubic-bezier(0.1, 0.8, 0.1, 1)';
+            tape.style.transform = 'translateX(-2300px)';
+        });
     }, 50);
 
-    // Reveal sequence
+    // 3. Deliver bundle outcome cards sequentially
     itemsWonList.forEach((item, index) => {
         setTimeout(() => {
             inventory.push(item);
             let resCard = document.createElement('div');
             resCard.className = 'bundle-result-card';
-            resCard.innerHTML = `<div>${item.emoji}</div><div style="font-size:10px;color:#ffca28;">${item.value} U</div>`;
-            resultsGrid.appendChild(resCard);
+            resCard.innerHTML = `<div>${item.emoji}</div><div style="font-size:10px;color:#ffca28;font-weight:bold;">${item.value} U</div>`;
+            document.getElementById('multiResultsContainer').appendChild(resCard);
             saveGame();
-        }, 2000 + (index * 200)); // Staggers the items appearing so it feels like a stack opening
+        }, 2200 + (index * 150));
     });
 
     setTimeout(() => {
@@ -243,18 +270,41 @@ function sellItem(index, event) {
 function renderUpgraderGrids() {
     const wagerGrid = document.getElementById('wagerGrid');
     wagerGrid.innerHTML = '';
+    
     inventory.forEach((item, index) => {
+        let isSelected = selectedWagerIndices.includes(index);
         let card = document.createElement('div');
-        card.className = `mini-item-card ${selectedWagerIndex === index ? 'selected' : ''}`;
+        card.className = `mini-item-card ${isSelected ? 'selected' : ''}`;
         card.innerHTML = `<span class="mic-emoji">${item.emoji}</span><span class="mic-val">${item.value} U</span>`;
         card.onclick = () => {
             if (isRolling) return;
-            selectedWagerIndex = index;
-            selectedTargetItem = null;
-            document.getElementById('stageWager').className = "dock-slot active";
-            document.getElementById('stageWager').innerHTML = `<span>${item.emoji}</span><span>${item.value} U</span>`;
+            
+            if (isSelected) {
+                selectedWagerIndices = selectedWagerIndices.filter(i => i !== index);
+            } else {
+                if (selectedWagerIndices.length >= 6) {
+                    alert("Maximum limit of 6 wager items reached!");
+                    return;
+                }
+                selectedWagerIndices.push(index);
+            }
+            
+            selectedTargetItem = null; // Clear old outcome targeting criteria
+            
+            let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+            const stageWager = document.getElementById('stageWager');
+            
+            if (selectedWagerIndices.length > 0) {
+                stageWager.className = "dock-slot active";
+                stageWager.innerHTML = `<span>📥 ${selectedWagerIndices.length} Items</span><span>Total: ${totalWagerVal} U</span>`;
+            } else {
+                stageWager.className = "dock-slot empty";
+                stageWager.innerText = "Select Wager";
+            }
+            
             document.getElementById('stageTarget').className = "dock-slot empty";
             document.getElementById('stageTarget').innerText = "Select Target";
+            
             renderUpgraderGrids();
             updateChance();
         };
@@ -264,16 +314,16 @@ function renderUpgraderGrids() {
     const targetGrid = document.getElementById('targetGrid');
     targetGrid.innerHTML = '';
     
-    if (selectedWagerIndex === null) {
-        targetGrid.innerHTML = '<div style="color:#6e6e82; padding:10px;">Select a wager item first!</div>';
+    if (selectedWagerIndices.length === 0) {
+        targetGrid.innerHTML = '<div style="color:#6e6e82; padding:10px;">Select up to 6 wager items first!</div>';
         return;
     }
 
-    const wagerItem = inventory[selectedWagerIndex];
-    const validTargets = itemPool.filter(item => item.value > wagerItem.value);
+    let totalWagerValue = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    const validTargets = itemPool.filter(item => item.value > totalWagerValue);
 
     if (validTargets.length === 0) {
-        targetGrid.innerHTML = '<div style="color:#ff6b6b; padding:10px;">Max item tier reached!</div>';
+        targetGrid.innerHTML = '<div style="color:#ff6b6b; padding:10px;">Max upgrade boundary tier reached!</div>';
         return;
     }
 
@@ -292,6 +342,102 @@ function renderUpgraderGrids() {
         };
         targetGrid.appendChild(card);
     });
+}
+
+function applyPresetMultiplier(mult) {
+    if (selectedWagerIndices.length === 0) return alert("Select wager items first!");
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    findAndSelectClosestTarget(totalWagerVal * mult);
+}
+
+function applyPresetChance(chancePercent) {
+    if (selectedWagerIndices.length === 0) return alert("Select wager items first!");
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    findAndSelectClosestTarget(totalWagerVal / (chancePercent / 100));
+}
+
+function findAndSelectClosestTarget(targetValue) {
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    const validTargets = itemPool.filter(item => item.value > totalWagerVal);
+    if(validTargets.length === 0) return;
+
+    let closest = validTargets.reduce((prev, curr) => {
+        return (Math.abs(curr.value - targetValue) < Math.abs(prev.value - targetValue)) ? curr : prev;
+    });
+
+    selectedTargetItem = closest;
+    document.getElementById('stageTarget').className = "dock-slot active";
+    document.getElementById('stageTarget').innerHTML = `<span>${closest.emoji}</span><span>${closest.value} U</span>`;
+    renderUpgraderGrids();
+    updateChance();
+}
+
+function updateChance() {
+    if (selectedWagerIndices.length === 0 || selectedTargetItem === null) {
+        document.getElementById('chanceDisplay').innerText = "0.00%";
+        document.getElementById('upgraderWheel').style.background = `#e74c3c`;
+        return;
+    }
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    let chance = (totalWagerVal / selectedTargetItem.value) * 100;
+    if (chance > 100) chance = 100;
+    document.getElementById('chanceDisplay').innerText = chance.toFixed(2) + "%";
+    
+    let halfSlice = (chance * 3.6) / 2;
+    let startGreen = 180 - halfSlice;
+    let endGreen = 180 + halfSlice;
+    document.getElementById('upgraderWheel').style.background = `conic-gradient(#e74c3c 0deg ${startGreen}deg, #34c759 ${startGreen}deg ${endGreen}deg, #e74c3c ${endGreen}deg 360deg)`;
+}
+
+function attemptUpgrade() {
+    if (selectedWagerIndices.length === 0 || selectedTargetItem === null) return alert("Staging cards are empty!");
+    let totalWagerVal = selectedWagerIndices.reduce((sum, idx) => sum + inventory[idx].value, 0);
+    let chance = (totalWagerVal / selectedTargetItem.value) * 100;
+    
+    isRolling = true;
+    stats.upgradesTried += 1;
+    const isFast = document.getElementById('fastUpgrade').checked;
+    const btn = document.getElementById('upgradeBtn');
+    const pointer = document.getElementById('wheelPointer');
+    
+    pointer.style.transition = 'none'; pointer.style.transform = 'rotate(0deg)'; pointer.offsetHeight;
+    
+    let roll = Math.random() * 100;
+    let isWin = roll <= chance;
+    let halfSlice = (chance * 3.6) / 2;
+    let targetDegree = isWin ? ((180 - halfSlice) + (Math.random() * (halfSlice * 2))) : (Math.random() > 0.5 ? (Math.random() * (180 - halfSlice)) : ((180 + halfSlice) + (Math.random() * (180 - halfSlice))));
+    let totalSpins = 1440 + targetDegree;
+
+    function resolveUpgrade() {
+        // Clear all selected wager items out of inventory safely
+        selectedWagerIndices.sort((a, b) => b - a);
+        selectedWagerIndices.forEach(idx => inventory.splice(idx, 1));
+
+        if (isWin) {
+            inventory.push(selectedTargetItem);
+            alert(`🎉 Success! Items merged into ${selectedTargetItem.emoji}`);
+        } else {
+            alert("💥 Boom! Upgrade exploded. All wagered items lost.");
+        }
+        
+        selectedWagerIndices = [];
+        selectedTargetItem = null;
+        document.getElementById('stageWager').className = "dock-slot empty";
+        document.getElementById('stageWager').innerText = "Select Wager";
+        document.getElementById('stageTarget').className = "dock-slot empty";
+        document.getElementById('stageTarget').innerText = "Select Target";
+        btn.innerText = "START UPGRADE"; btn.disabled = false;
+        isRolling = false;
+        saveGame(); renderUpgraderGrids(); updateChance();
+    }
+
+    if (isFast) resolveUpgrade();
+    else {
+        btn.innerText = "ROLLING..."; btn.disabled = true;
+        pointer.style.transition = 'transform 2.5s cubic-bezier(0.1, 0.8, 0.1, 1)';
+        pointer.style.transform = `rotate(${totalSpins}deg)`;
+        setTimeout(resolveUpgrade, 2600);
+    }
 }
 
 function applyPresetMultiplier(mult) {

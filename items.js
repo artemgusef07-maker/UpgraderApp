@@ -27,10 +27,51 @@ const itemPool = [
     { emoji: "✨", value: 65000 }, { emoji: "☄️", value: 70000 }, { emoji: "🪐", value: 75000 }, { emoji: "🌎", value: 80000 }, { emoji: "🌍", value: 85000 }
 ];
 
+/* REPLACE THE casesData ARRAY IN items.js WITH THIS */
 const casesData = [
-    { name: "Novice Crate", cost: 30, contents: [{ item: itemPool[0], chance: 50 }, { item: itemPool[1], chance: 30 }, { item: itemPool[2], chance: 20 }] },
-    { name: "Challenger Case", cost: 100, contents: [{ item: itemPool[15], chance: 40 }, { item: itemPool[16], chance: 30 }, { item: itemPool[17], chance: 20 }, { item: itemPool[18], chance: 10 }] },
-    { name: "Elite Box", cost: 500, contents: [{ item: itemPool[30], chance: 40 }, { item: itemPool[31], chance: 30 }, { item: itemPool[32], chance: 20 }, { item: itemPool[33], chance: 10 }] },
-    { name: "Vanguard Cache", cost: 2000, contents: [{ item: itemPool[50], chance: 40 }, { item: itemPool[51], chance: 30 }, { item: itemPool[52], chance: 20 }, { item: itemPool[53], chance: 10 }] },
-    { name: "Prestige Vault", cost: 7500, contents: [{ item: itemPool[70], chance: 40 }, { item: itemPool[71], chance: 30 }, { item: itemPool[72], chance: 20 }, { item: itemPool[73], chance: 10 }] }
+    {
+        name: "Novice Crate", cost: 30,
+        contents: [
+            { item: itemPool[0], chance: 25 }, { item: itemPool[1], chance: 20 },
+            { item: itemPool[2], chance: 15 }, { item: itemPool[3], chance: 12 },
+            { item: itemPool[4], chance: 10 }, { item: itemPool[5], chance: 8 },
+            { item: itemPool[6], chance: 6 },  { item: itemPool[7], chance: 4 }
+        ]
+    },
+    {
+        name: "Challenger Case", cost: 100,
+        contents: [
+            { item: itemPool[10], chance: 25 }, { item: itemPool[11], chance: 20 },
+            { item: itemPool[12], chance: 15 }, { item: itemPool[13], chance: 12 },
+            { item: itemPool[14], chance: 10 }, { item: itemPool[15], chance: 8 },
+            { item: itemPool[16], chance: 6 },  { item: itemPool[17], chance: 4 }
+        ]
+    },
+    {
+        name: "Elite Box", cost: 500,
+        contents: [
+            { item: itemPool[25], chance: 25 }, { item: itemPool[26], chance: 20 },
+            { item: itemPool[27], chance: 15 }, { item: itemPool[28], chance: 12 },
+            { item: itemPool[29], chance: 10 }, { item: itemPool[30], chance: 8 },
+            { item: itemPool[31], chance: 6 },  { item: itemPool[32], chance: 4 }
+        ]
+    },
+    {
+        name: "Vanguard Cache", cost: 2000,
+        contents: [
+            { item: itemPool[45], chance: 25 }, { item: itemPool[46], chance: 20 },
+            { item: itemPool[47], chance: 15 }, { item: itemPool[48], chance: 12 },
+            { item: itemPool[49], chance: 10 }, { item: itemPool[50], chance: 8 },
+            { item: itemPool[51], chance: 6 },  { item: itemPool[52], chance: 4 }
+        ]
+    },
+    {
+        name: "Prestige Vault", cost: 7500,
+        contents: [
+            { item: itemPool[65], chance: 25 }, { item: itemPool[66], chance: 20 },
+            { item: itemPool[67], chance: 15 }, { item: itemPool[68], chance: 12 },
+            { item: itemPool[69], chance: 10 }, { item: itemPool[70], chance: 8 },
+            { item: itemPool[71], chance: 6 },  { item: itemPool[72], chance: 4 }
+        ]
+    }
 ];

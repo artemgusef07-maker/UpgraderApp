@@ -114,17 +114,15 @@
             </div>
         </div>
 
-        <!-- SMOOTH MULTI-ITEM ROLLER MODAL -->
+        <!-- REPLACE YOUR OLD #unboxingModal IN index.html WITH THIS -->
         <div id="unboxingModal" class="modal-backdrop">
-            <div class="roller-window">
-                <div class="roller-title" id="rollerCaseTitle">Opening Case...</div>
+            <div class="roller-window massive-roller-view">
+                <div class="roller-title" id="rollerCaseTitle">Opening Cases...</div>
                 
-                <div class="roller-viewport">
-                    <div class="roller-center-line"></div>
-                    <div id="rollerTape" class="roller-tape"></div>
-                </div>
+                <!-- Stacks 1 to 5 synchronized scrolling lanes dynamically -->
+                <div id="multiRollersWrapper" class="multi-rollers-wrapper"></div>
 
-                <!-- Container showing items won during multi-pull -->
+                <!-- Summary display of items won -->
                 <div id="multiResultsContainer" class="multi-results-grid"></div>
 
                 <button class="modal-claim-btn" id="modalClaimBtn" onclick="closeUnboxModal()">COLLECT BUNDLE</button>
