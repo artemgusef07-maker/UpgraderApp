@@ -1,6 +1,8 @@
 // ==========================================
-// 1. STATE & ENGINE DEBOUNCER
+// 1. STATE & CLOUD COMPRESSION ENGINE
 // ==========================================
+const tg = window.Telegram ? window.Telegram.WebApp : null;
+
 let state = {
     balance: 500.0,
     inventory: [],
@@ -8,47 +10,123 @@ let state = {
     unlockedIds: {}
 };
 
-const SAVE_KEY = "sleek_simulator_save_v1";
+const SAVE_KEY = "sleek_sim_cloud_v2";
 let saveTimeout = null;
 
-// Debounced for seamless, un-lagged real-time mobile tapping
+// Shortens instance IDs to save CloudStorage bytes (e.g., from "inst_170123123_0.123" to "a1b2c3d4")
+function generateShortId() {
+    return Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
+}
+
+// Intercept unboxing/upgrading to use short IDs 
+// Note: Ensure your executeUnboxing and attemptUpgrade functions use generateShortId() instead of Date.now() + Math.random() if possible, but this engine will handle old ones too.
+
 function saveGame(instant = false) {
     if (instant) {
         if (saveTimeout) clearTimeout(saveTimeout);
-        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        executeCloudSave();
         return;
     }
     if (saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
-        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-    }, 300);
+        executeCloudSave();
+    }, 400); // 400ms debounce to prevent Telegram API rate limits
+}
+
+function executeCloudSave() {
+    // 1. COMPRESS THE DATA to avoid Telegram's 4KB string limit
+    const compressedData = {
+        b: state.balance,
+        u: state.upgradesProcessed,
+        un: state.unlockedIds,
+        // Map inventory to just [item_id, short_instance_id] -> e.g., ["glock", "x8k2j"]
+        i: state.inventory.map(item => [item.id, item.instanceId]) 
+    };
+
+    const serialized = JSON.stringify(compressedData);
+
+    if (tg && tg.CloudStorage) {
+        tg.CloudStorage.setItem(SAVE_KEY, serialized, (err, success) => {
+            if (err) console.error("Telegram Cloud Save Failed:", err);
+        });
+    } else {
+        // Fallback for desktop browsers outside of Telegram
+        localStorage.setItem(SAVE_KEY, serialized);
+    }
 }
 
 function loadGame() {
-    const saved = localStorage.getItem(SAVE_KEY);
-    if (saved) {
+    if (tg && tg.CloudStorage) {
+        // Async load from Telegram Servers
+        tg.CloudStorage.getItem(SAVE_KEY, (err, value) => {
+            if (!err && value) {
+                decompressAndLoad(value);
+            } else {
+                // If cloud is empty, check local storage just in case
+                const localData = localStorage.getItem(SAVE_KEY);
+                decompressAndLoad(localData);
+            }
+        });
+    } else {
+        // Fallback load
+        decompressAndLoad(localStorage.getItem(SAVE_KEY));
+    }
+}
+
+function decompressAndLoad(savedStr) {
+    if (savedStr) {
         try {
-            const parsed = JSON.parse(saved);
-            state.balance = typeof parsed.balance === 'number' ? parsed.balance : 500.0;
-            state.inventory = Array.isArray(parsed.inventory) ? parsed.inventory : [];
-            state.upgradesProcessed = parsed.upgradesProcessed || 0;
-            state.unlockedIds = parsed.unlockedIds || {};
+            const parsed = JSON.parse(savedStr);
+            
+            // Check if it's our new compressed format
+            if (parsed.b !== undefined) {
+                state.balance = parsed.b;
+                state.upgradesProcessed = parsed.u || 0;
+                state.unlockedIds = parsed.un || {};
+                
+                // 2. DECOMPRESS INVENTORY: Rebuild full objects from the itemPool database
+                state.inventory = (parsed.i || []).map(compactArr => {
+                    const templateId = compactArr[0];
+                    const instId = compactArr[1];
+                    
+                    // Find the base item in item.js
+                    const baseItem = itemPool.find(x => x.id === templateId);
+                    
+                    // Rebuild and attach the instance ID so it can be sold/upgraded
+                    if (baseItem) {
+                        return { ...baseItem, instanceId: instId };
+                    }
+                    return null;
+                }).filter(item => item !== null); // Remove any broken items
+                
+            } else {
+                // Failsafe for legacy uncompressed local data
+                state.balance = parsed.balance || 500.0;
+                state.inventory = parsed.inventory || [];
+                state.upgradesProcessed = parsed.upgradesProcessed || 0;
+                state.unlockedIds = parsed.unlockedIds || {};
+            }
         } catch (e) {
-            console.error("Data load tracking failed. Resetting memory config.", e);
-            clearLegacyData();
+            console.error("Save state corrupted. Starting fresh.", e);
         }
     }
+    
+    // Refresh the UI after the asynchronous data fetch is complete
     updateUIDisplays();
+    renderInventory();
+    if (document.getElementById('itemIndexModal') && document.getElementById('itemIndexModal').style.display !== 'none') {
+        renderIndex();
+    }
 }
 
 function clearLegacyData() {
-    localStorage.removeItem(SAVE_KEY);
     state = { balance: 500.0, inventory: [], upgradesProcessed: 0, unlockedIds: {} };
-    saveGame(true);
+    if (tg && tg.CloudStorage) tg.CloudStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(SAVE_KEY);
     updateUIDisplays();
     renderInventory();
-    if (document.getElementById('itemIndexModal').style.display !== 'none') renderIndex();
-    alert("Simulator data state initialized!");
+    if (document.getElementById('itemIndexModal') && document.getElementById('itemIndexModal').style.display !== 'none') renderIndex();
+    alert("Simulator data wiped from Cloud and Local memory!");
 }
 
 // ==========================================
