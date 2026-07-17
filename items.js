@@ -1,4 +1,4 @@
-// 1. THE COMPLETE ITEM ARCHIVE (Fixed with names, IDs, and rarities for the Index)
+// GLOBAL DATABASE ARCHIVE
 const itemPool = [
     { id: "wood", name: "Wood Shard", emoji: "🪵", value: 10, rarity: "common" },
     { id: "brick", name: "Clay Brick", emoji: "🧱", value: 25, rarity: "common" },
@@ -13,7 +13,6 @@ const itemPool = [
     { id: "crown", name: "Alpha Crown", emoji: "👑", value: 30000, rarity: "legendary" }
 ];
 
-// 2. THE CASE MENUS AND DROP RATES
 const casesData = [
     {
         name: "Recruit Cache",
@@ -56,11 +55,10 @@ const casesData = [
     }
 ];
 
-// 3. FAIL-SAFE ALIASES (Ensures app.js reads the arrays no matter what it named them)
+// FAIL-SAFE SYSTEM ALIAS MATCHERS
 const allItems = itemPool;
 const items = itemPool;
 const itemsData = itemPool;
-
 const cases = casesData;
 const casePool = casesData;
 const caseList = casesData;

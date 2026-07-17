@@ -1,18 +1,27 @@
 // ==========================================
-// 1. USER MEMORY (STATE MANAGEMENT)
+// 1. STATE & ENGINE DEBOUNCER
 // ==========================================
 let state = {
     balance: 500.0,
     inventory: [],
     upgradesProcessed: 0,
-    unlockedIds: {} // Tracks discovered items for the Index Archive
+    unlockedIds: {}
 };
 
-// Key name for local browser storage
 const SAVE_KEY = "sleek_simulator_save_v1";
+let saveTimeout = null;
 
-function saveGame() {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+// Debounced for seamless, un-lagged real-time mobile tapping
+function saveGame(instant = false) {
+    if (instant) {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        return;
+    }
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    }, 300);
 }
 
 function loadGame() {
@@ -20,13 +29,12 @@ function loadGame() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
-            // Ensure backup fallbacks if properties are missing
             state.balance = typeof parsed.balance === 'number' ? parsed.balance : 500.0;
             state.inventory = Array.isArray(parsed.inventory) ? parsed.inventory : [];
             state.upgradesProcessed = parsed.upgradesProcessed || 0;
             state.unlockedIds = parsed.unlockedIds || {};
         } catch (e) {
-            console.error("Save data corrupted, resetting to defaults.", e);
+            console.error("Data load tracking failed. Resetting memory config.", e);
             clearLegacyData();
         }
     }
@@ -36,33 +44,27 @@ function loadGame() {
 function clearLegacyData() {
     localStorage.removeItem(SAVE_KEY);
     state = { balance: 500.0, inventory: [], upgradesProcessed: 0, unlockedIds: {} };
-    saveGame();
+    saveGame(true);
     updateUIDisplays();
     renderInventory();
-    if(document.getElementById('itemIndexModal').style.display !== 'none') renderIndex();
-    alert("Simulator data reset successfully!");
+    if (document.getElementById('itemIndexModal').style.display !== 'none') renderIndex();
+    alert("Simulator data state initialized!");
 }
 
 // ==========================================
-// 2. UI CORE & TAB SWITCHING
+// 2. RENDERS & INTERFACES
 // ==========================================
 function switchTab(tabId) {
-    // Toggle active classes on Nav Buttons
     document.querySelectorAll('.tab-trigger').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.getElementById(`btn-${tabId}`);
     if (activeBtn) activeBtn.classList.add('active');
 
-    // Toggle viewport visibility
     document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active-view'));
     const activeView = document.getElementById(tabId);
     if (activeView) activeView.classList.add('active-view');
 
-    // Refresh contextual tabs
-    if (tabId === 'profileTab') {
-        renderInventory();
-    } else if (tabId === 'upgraderTab') {
-        renderUpgraderTrays();
-    }
+    if (tabId === 'profileTab') renderInventory();
+    if (tabId === 'upgraderTab') renderUpgraderTrays();
 }
 
 function updateUIDisplays() {
@@ -72,7 +74,7 @@ function updateUIDisplays() {
 }
 
 // ==========================================
-// 3. CASE OPENING SYSTEM
+// 3. CASE UNBOXING SUBSYSTEM
 // ==========================================
 let activeCase = null;
 let currentQuantity = 1;
@@ -135,7 +137,7 @@ function confirmCasePurchase() {
     const totalCost = activeCase.cost * currentQuantity;
 
     if (state.balance < totalCost) {
-        alert("Insufficient funds for this batch rollout!");
+        alert("Insufficient funds!");
         return;
     }
 
@@ -157,7 +159,6 @@ function executeUnboxing(box, qty) {
 
     let rewards = [];
 
-    // Calculate rolled items using percentages
     for (let i = 0; i < qty; i++) {
         let roll = Math.random() * 100;
         let cumulative = 0;
@@ -170,10 +171,9 @@ function executeUnboxing(box, qty) {
                 break;
             }
         }
-        rewards.push({ ...selectedItem, instanceId: Date.now() + i + Math.random() });
+        rewards.push({ ...selectedItem, instanceId: 'inst_' + Date.now() + '_' + i + '_' + Math.random() });
     }
 
-    // Render rolling animation bars
     for (let i = 0; i < qty; i++) {
         const lane = document.createElement('div');
         lane.className = 'lane-viewport';
@@ -184,7 +184,6 @@ function executeUnboxing(box, qty) {
         rollersWrapper.appendChild(lane);
 
         const conveyor = document.getElementById(`conveyor-${i}`);
-        // Populate random items for visualization velocity
         for (let x = 0; x < 25; x++) {
             const randomItem = itemPool[Math.floor(Math.random() * itemPool.length)];
             const node = document.createElement('div');
@@ -193,18 +192,16 @@ function executeUnboxing(box, qty) {
             conveyor.appendChild(node);
         }
 
-        // Trigger animation engine slide
         setTimeout(() => {
             conveyor.style.transition = 'transform 2.5s cubic-bezier(0.1, 1, 0.1, 1)';
-            conveyor.style.transform = 'translateX(-1216px)'; // Perfectly aligns cell 20 into crosshair
+            conveyor.style.transform = 'translateX(-1216px)';
         }, 50);
     }
 
-    // Complete processing routines after animation stops
     setTimeout(() => {
         rewards.forEach(item => {
             state.inventory.push(item);
-            state.unlockedIds[item.id] = true; // Log to archival book index
+            state.unlockedIds[item.id] = true;
             
             const pill = document.createElement('div');
             pill.className = 'reward-pill';
@@ -213,7 +210,7 @@ function executeUnboxing(box, qty) {
             resultsContainer.appendChild(pill);
         });
 
-        saveGame();
+        saveGame(true); // Locks inside secure file layer instantly
         updateUIDisplays();
         claimBtn.style.display = 'block';
     }, 2600);
@@ -236,8 +233,7 @@ function renderUpgraderTrays() {
     wagerGrid.innerHTML = '';
     targetGrid.innerHTML = '';
 
-    // Render owned items available to bet
-    state.inventory.forEach((item, index) => {
+    state.inventory.forEach(item => {
         const card = document.createElement('div');
         card.className = `item-capsule ${wagerItem && wagerItem.instanceId === item.instanceId ? 'selected' : ''}`;
         card.onclick = () => selectWager(item);
@@ -248,7 +244,6 @@ function renderUpgraderTrays() {
         wagerGrid.appendChild(card);
     });
 
-    // Render global pool available to target
     itemPool.forEach(item => {
         const card = document.createElement('div');
         card.className = `item-capsule ${targetItem && targetItem.id === item.id ? 'selected' : ''}`;
@@ -296,7 +291,6 @@ function calculateOdds() {
         return;
     }
 
-    // Math calculation for standard upgrade chance parameters
     let odds = (wagerItem.value / targetItem.value) * 100;
     if (odds > 99.9) odds = 99.9;
 
@@ -318,11 +312,10 @@ function attemptUpgrade() {
     let rollResult = Math.random() * 100;
     let isWin = rollResult <= odds;
 
-    // Remove the wagered item immediately from state memory
     state.inventory = state.inventory.filter(i => i.instanceId !== wagerItem.instanceId);
 
     const spinDuration = fastMode ? 100 : 2000;
-    const targetDegrees = 3600 + (rollResult * 3.6); // Spun calculation adjustments
+    const targetDegrees = 3600 + (rollResult * 3.6);
 
     if (!fastMode) {
         needle.style.transition = 'transform 2s cubic-bezier(0.1, 1, 0.2, 1)';
@@ -331,21 +324,20 @@ function attemptUpgrade() {
 
     setTimeout(() => {
         if (isWin) {
-            state.inventory.push({ ...targetItem, instanceId: Date.now() });
+            state.inventory.push({ ...targetItem, instanceId: 'inst_' + Date.now() + '_' + Math.random() });
             state.unlockedIds[targetItem.id] = true;
-            alert(`SUCCESS! Upgraded to ${targetItem.emoji} ${targetItem.name}!`);
+            alert(`SUCCESS! Obtained ${targetItem.emoji} ${targetItem.name}!`);
         } else {
-            alert("UPGRADE FAILED! Item was destroyed.");
+            alert("UPGRADE FAILED! Asset vaporized.");
         }
 
-        // Clean up inputs and refresh state engines
         wagerItem = null;
         targetItem = null;
         needle.style.transition = 'none';
         needle.style.transform = 'rotate(0deg)';
         
         state.upgradesProcessed++;
-        saveGame();
+        saveGame(true);
         updateUIDisplays();
         renderUpgraderTrays();
         
@@ -357,28 +349,27 @@ function attemptUpgrade() {
     }, spinDuration);
 }
 
-// Preset Helpers
 function applyPresetMultiplier(mult) {
-    if(!wagerItem) return alert("Select a wager item first!");
+    if (!wagerItem) return alert("Select a wager item first!");
     let targetVal = wagerItem.value * mult;
     let bestMatch = [...itemPool].sort((a,b) => Math.abs(a.value - targetVal) - Math.abs(b.value - targetVal))[0];
-    if(bestMatch) selectTarget(bestMatch);
+    if (bestMatch) selectTarget(bestMatch);
 }
 
 function applyPresetChance(targetChance) {
-    if(!wagerItem) return alert("Select a wager item first!");
+    if (!wagerItem) return alert("Select a wager item first!");
     let calculatedTargetValue = wagerItem.value / (targetChance / 100);
     let bestMatch = [...itemPool].sort((a,b) => Math.abs(a.value - calculatedTargetValue) - Math.abs(b.value - calculatedTargetValue))[0];
-    if(bestMatch) selectTarget(bestMatch);
+    if (bestMatch) selectTarget(bestMatch);
 }
 
 // ==========================================
-// 5. PROFILE & DIRECT COIN CLICKER
+// 5. CLICK GENERATOR & INVENTORY ACTIONS
 // ==========================================
 function clickCoin() {
     state.balance += 1.0;
-    updateUIDisplays();
-    saveGame();
+    updateUIDisplays(); // Updates UI instantly in real-time on screen
+    saveGame(false);    // Smooth background save (doesn't freeze app thread)
 }
 
 function renderInventory() {
@@ -387,7 +378,7 @@ function renderInventory() {
     invGrid.innerHTML = '';
 
     if (state.inventory.length === 0) {
-        invGrid.innerHTML = '<div style="grid-column: span 3; text-align:center; color:var(--text-muted); padding:20px; font-size:12px;">Backpack is empty. Roll cases or tap the coin to start!</div>';
+        invGrid.innerHTML = '<div style="grid-column: span 3; text-align:center; color:var(--text-muted); padding:20px; font-size:12px;">Backpack empty. Start rollout configurations!</div>';
         return;
     }
 
@@ -408,13 +399,13 @@ function renderInventory() {
 function sellItem(instanceId, value) {
     state.inventory = state.inventory.filter(item => item.instanceId !== instanceId);
     state.balance += value;
-    saveGame();
+    saveGame(true);
     updateUIDisplays();
     renderInventory();
 }
 
 // ==========================================
-// 6. ARCHIVE BOOK INDEX WINDOWS
+// 6. ARCHIVE CATALOG SYSTEM
 // ==========================================
 function openIndexModal() {
     renderIndex();
@@ -453,7 +444,7 @@ function renderIndex() {
     });
 }
 
-// RUN SEED LAUNCHERS ON PAGE MOUNT
+// RUN SEED INITIALIZERS ON LAUNCH
 window.onload = function() {
     loadGame();
     renderCaseMenu();
