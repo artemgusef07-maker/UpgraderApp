@@ -211,7 +211,6 @@ function sellItem(index, event) {
     balance += Math.floor(inventory[index].value * 0.7);
     inventory.splice(index, 1);
     
-    // Fix: Adjust selection index if we sold an item that was before the selected one
     if (selectedWagerIndex === index) {
         selectedWagerIndex = null;
         selectedTargetItem = null;
@@ -225,7 +224,6 @@ function sellItem(index, event) {
 }
 
 function renderUpgraderGrids() {
-    // Fix: Bounds checking
     if (selectedWagerIndex !== null && (selectedWagerIndex >= inventory.length || selectedWagerIndex < 0)) {
         selectedWagerIndex = null;
         selectedTargetItem = null;
@@ -280,17 +278,22 @@ function renderUpgraderGrids() {
 function updateChance() {
     if (selectedWagerIndex === null || selectedTargetItem === null) {
         document.getElementById('chanceDisplay').innerText = "0.00%";
-        document.getElementById('upgraderWheel').style.background = `#e74c3c`;
+        document.getElementById('chanceDisplay').style.color = "#ff3b30"; // Neon Red
+        document.getElementById('upgraderWheel').style.background = `#ff3b30`;
         return;
     }
     let chance = (inventory[selectedWagerIndex].value / selectedTargetItem.value) * 100;
     if (chance > 100) chance = 100;
+    
     document.getElementById('chanceDisplay').innerText = chance.toFixed(2) + "%";
+    document.getElementById('chanceDisplay').style.color = "#00fa9a"; // Neon Green
     
     let halfSlice = (chance * 3.6) / 2;
     let startGreen = 180 - halfSlice;
     let endGreen = 180 + halfSlice;
-    document.getElementById('upgraderWheel').style.background = `conic-gradient(#e74c3c 0deg ${startGreen}deg, #34c759 ${startGreen}deg ${endGreen}deg, #e74c3c ${endGreen}deg 360deg)`;
+    
+    document.getElementById('upgraderWheel').style.background = 
+        `conic-gradient(#ff3b30 0deg ${startGreen}deg, #00fa9a ${startGreen}deg ${endGreen}deg, #ff3b30 ${endGreen}deg 360deg)`;
 }
 
 function applyPresetMultiplier(mult) {
@@ -325,13 +328,19 @@ function attemptUpgrade() {
     const btn = document.getElementById('upgradeBtn');
     const pointer = document.getElementById('wheelPointer');
     
-    pointer.style.transition = 'none'; pointer.style.transform = 'rotate(0deg)'; pointer.offsetHeight;
+    pointer.style.transition = 'none'; 
+    pointer.style.transform = 'rotate(0deg)'; 
+    pointer.offsetHeight;
     
     let roll = Math.random() * 100;
     let isWin = roll <= chance;
     let halfSlice = (chance * 3.6) / 2;
-    let targetDegree = isWin ? ((180 - halfSlice) + (Math.random() * (halfSlice * 2))) : (Math.random() > 0.5 ? (Math.random() * (180 - halfSlice)) : ((180 + halfSlice) + (Math.random() * (180 - halfSlice))));
-    let totalSpins = 1440 + targetDegree;
+    
+    let targetDegree = isWin 
+        ? ((180 - halfSlice) + (Math.random() * (halfSlice * 2))) 
+        : (Math.random() > 0.5 ? (Math.random() * (180 - halfSlice)) : ((180 + halfSlice) + (Math.random() * (180 - halfSlice))));
+    
+    let totalSpins = 1800 + targetDegree;
 
     function resolveUpgrade() {
         if (selectedWagerIndex !== null && inventory[selectedWagerIndex]) {
@@ -357,11 +366,13 @@ function attemptUpgrade() {
         updateChance();
     }
 
-    if (isFast) resolveUpgrade();
-    else {
-        btn.innerText = "ROLLING..."; btn.disabled = true;
-        pointer.style.transition = 'transform 2.5s cubic-bezier(0.1, 0.8, 0.1, 1)';
+    if (isFast) {
+        resolveUpgrade();
+    } else {
+        btn.innerText = "ROLLING..."; 
+        btn.disabled = true;
+        pointer.style.transition = 'transform 3.8s cubic-bezier(0.1, 1, 0.1, 1)';
         pointer.style.transform = `rotate(${totalSpins}deg)`;
-        setTimeout(resolveUpgrade, 2600);
+        setTimeout(resolveUpgrade, 3900);
     }
 }
